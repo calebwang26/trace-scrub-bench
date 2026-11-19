@@ -81,8 +81,17 @@ def generate_trace(seed: int, index: int) -> tuple[dict, list[dict], list[dict],
     steps += content.run_pytest(rng, v, passed=(outcome == "success"))
     steps.append(content.say("All tests pass now. The fix is in place." if outcome == "success" else f"I could not get `{v.test_name}` to pass. Stopping here with the failure above."))
 
-    # Strip the markers & turn them into exact positions.
     trace_id = f"trace-{rng.getrandbits(48):012x}"
+    meta = {"trace_id": trace_id, "model": model, "harness": harness, "task": task, "outcome": outcome, "has_repo": has_repo}
+    return finish_trace(meta, steps, reg)
+
+
+def finish_trace(meta: dict, steps: list[dict], reg: Registry) -> tuple[dict, list[dict], list[dict], list[dict]]:
+    """Strip the markers from every step & turn them into exact positions.
+
+    Returns (trace, ground_truth, decoys, python_steps) in the on-disk row format.
+    """
+    trace_id = meta["trace_id"]
     ground_truth, decoy_rows, python_steps, clean_steps = [], [], [], []
     seen: set[int] = set()
     for i, s in enumerate(steps):
@@ -101,7 +110,7 @@ def generate_trace(seed: int, index: int) -> tuple[dict, list[dict], list[dict],
             (ground_truth if item.kind == "sensitive" else decoy_rows).append(row)
     assert len(seen) == len(reg.items), "a planted item got lost"
 
-    trace = {"trace_id": trace_id, "model": model, "harness": harness, "task": task, "steps": clean_steps, "outcome": outcome, "has_repo": has_repo}
+    trace = {"trace_id": trace_id, "model": meta["model"], "harness": meta["harness"], "task": meta["task"], "steps": clean_steps, "outcome": meta["outcome"], "has_repo": meta["has_repo"]}
     return trace, ground_truth, decoy_rows, python_steps
 
 
@@ -112,20 +121,23 @@ def dumps(row: dict) -> str:
 FILES = ["traces.jsonl", "ground_truth.jsonl", "decoys.jsonl", "python_steps.jsonl", "manifest.json"]
 
 
-def generate(seed: int, n_traces: int, out_dir: str | Path) -> dict:
-    """Generate a dataset into out_dir & return its manifest."""
+def write_dataset(built, out_dir: str | Path, header: dict) -> dict:
+    """Write built traces to out_dir in the standard layout & return the manifest.
+
+    `built` yields (trace, ground_truth, decoys, python_steps) tuples.
+    """
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     counts = {"sensitive_by_type": Counter(), "sensitive_by_variant": Counter(), "decoys_by_type": Counter()}
-    n_steps = n_python = 0
+    n_traces = n_steps = n_python = 0
     names = ["traces.jsonl", "ground_truth.jsonl", "decoys.jsonl", "python_steps.jsonl"]
     handles = [open(out / name, "w", encoding="utf-8", newline="\n") for name in names]
     try:
-        for index in range(n_traces):
-            trace, truth, decoy_rows, py = generate_trace(seed, index)
+        for trace, truth, decoy_rows, py in built:
             for handle, rows in zip(handles, ([trace], truth, decoy_rows, py)):
                 for row in rows:
                     handle.write(dumps(row) + "\n")
+            n_traces += 1
             n_steps += len(trace["steps"])
             n_python += len(py)
             for row in truth:
@@ -137,7 +149,7 @@ def generate(seed: int, n_traces: int, out_dir: str | Path) -> dict:
         for handle in handles:
             handle.close()
     manifest = {
-        "seed": seed,
+        **header,
         "n_traces": n_traces,
         "n_steps": n_steps,
         "n_python_steps": n_python,
@@ -147,6 +159,11 @@ def generate(seed: int, n_traces: int, out_dir: str | Path) -> dict:
     }
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     return manifest
+
+
+def generate(seed: int, n_traces: int, out_dir: str | Path) -> dict:
+    """Generate a dataset into out_dir & return its manifest."""
+    return write_dataset((generate_trace(seed, index) for index in range(n_traces)), out_dir, {"seed": seed})
 
 
 def main() -> None:
