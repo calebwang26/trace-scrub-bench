@@ -89,3 +89,31 @@ Built & tested **before** any real scrubber exists, so the measuring tool can't 
 - The frozen checksums were updated for the ground-truth files. This happened before any test-split score was published, so no published number changed.
 - **v1 on dev (real numbers, corrected scorer):** recall 70.3%, severity-weighted score 68.7%, precision 85.2%, utility kept 99.79%, decoys kept 56.4%. By type: email, phone & IPv4 100%; private key 89.6%; GitHub token 84.1%; database password 83.7%; JWT 80.5%; AWS key 68.3%; OpenAI-style key 58.8%; env secret 34.6%; person name 0%. By variant: plain 75.4%, escaped JSON 79.0%, split 0%, base64 0%.
 - **Decision:** v1 is not scored on the test split yet. The test split gets run once, at the end, with every scrubber frozen.
+
+## Step 8: scrubber v2, tuned on the dev split only (`scrubber/scrub.py`, `scrubber/entropy.py`)
+
+Method: run `python -m bench.misses --scrubber <name>` on dev, read the groups of misses & damaged decoys, fix the largest group, repeat. The test split & the adversarial traces were not scored at any point in this step.
+
+Each fix & the dev evidence behind it:
+
+| dev finding (v1) | fix in v2 |
+|---|---|
+| every `sk-proj-...` key missed (v1's pattern stopped at the `-`) | allow `-` & `_` inside OpenAI-style keys |
+| AWS secret access key missed 63 of 63 (no fixed prefix) | secrets named by their variable: any `name = value` / `name: value` whose name contains secret, password, token, credential or ends in `_key` |
+| env secrets missed in Python constants (52 of 52), compose files (49 of 49) & log lines (48 of 48): v1 required `NAME=value` at the start of a line | the same assignment rule, in two forms: rest-of-line & mid-line |
+| env secrets inside JSON missed (63 of 63): escaped `\n` & `\"` defeat line-based regexes | if a text is valid JSON, decode each string, scrub it & re-encode it. Nested JSON is decoded again |
+| every split secret missed (221 of 221) | `joined_view`: undo shell continuations, adjacent string literals & terminal wraps, run the rules on the joined text, map matches back to both fragments |
+| every base64 secret missed (247 of 247) | decode base64 blobs & redact the blob if the decoded text contains a secret; plus the entropy detector |
+| every person name missed (1,104 of 1,104) | context rules: `Author:`, `Name <email>`, git blame, `"name": "..."` |
+| 44% of decoys damaged: example keys, `.env.example` placeholders, `user@example.com`, `127.0.0.1`, version numbers | `is_placeholder` (EXAMPLE, `changeme`, `xxxx`, `<...>`), an email allowlist, loopback & "name version" lines for IPs |
+
+- **Entropy threshold, chosen from dev data:** among 104,559 candidate tokens (20+ base64-alphabet characters) on dev, a threshold of 4.3 bits per character flagged 4 of 96,528 harmless non-decoy strings; 4.0 flagged 128; 3.8 flagged 6,505 (long identifiers & paths). Pure-hex tokens are skipped, because hex can't exceed 4.0 bits & commit hashes are not secrets. `sha512-...` integrity hashes are skipped by prefix.
+- **The entropy detector's known false positive:** public base64 such as a test image payload (`PNG_1X1 = "..."`). It is as random as a secret & nothing in the string says otherwise. v2 damages 278 of 562 base64 decoys on dev for this reason. A test pins this behaviour instead of hiding it.
+- **Problem (a regression found on the first v2 run):** v2 caught 0 of 134 plain private-key files, although v1 caught them all. **Cause:** the new line-joining logic saw a PEM block (a header followed by lines of pure base64) as one long wrapped token & let the entropy rule redact it line by line, starting inside the header. **Fix:** the private-key rule now runs first, & the split-secret pass skips anything inside a `-----BEGIN ... END-----` block.
+- **Problem:** `.env` lines such as `PORT=8000` right after a secret were glued onto the secret by the wrap logic & redacted with it. **Fix:** a wrapped continuation line may not contain `=` (except base64 padding at the end). A test covers it.
+- **Problem:** a few random secrets without any digit (`FAKEDXXYymKAGIOcf`) slipped past the "must contain a digit" check. **Fix:** 12+ characters mixing upper & lower case also count as secret-shaped.
+- **v2 keeps the BEGIN/END lines of a private key** & redacts only the body, so a reader still sees that a key of that kind was there.
+- **What v2 still misses on dev (90 items, left as they are):** names in ordinary prose (72 of 158 user messages: "Sofia Costa wrote the original version"), which need a language model, not a regex; short or low-randomness secrets split across two Python string literals (11 of 20); passwords that contain a quote character inside a quoted shell command (7 of 19), which are ambiguous even to a shell.
+- **v2 on dev (real numbers):** recall 98.6% (v1: 70.3%), severity-weighted score 98.9% (68.7%), precision 95.8% (85.2%), utility kept 99.93% (99.79%), decoys kept 95.1% (56.4%), Python still parses 100%, about 180 traces/sec (v1: about 600).
+- **Honest caveat:** the same author wrote the generator, the adversarial traces & this scrubber. v2 was tuned only on dev output, but it can't be truly blind to the generator's design. The held-out seed, the adversarial traces & the third-party entries exist to bound that.
+- `bench/misses.py` now also lists "collateral": harmless text that was destroyed, largest first.

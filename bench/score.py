@@ -104,6 +104,7 @@ def score(data: Dataset, scrub_many: Callable[[list[str]], list[str]], name: str
     python_total = python_ok = 0
     misses: list[dict] = []
     false_positives: list[dict] = []
+    collateral: Counter = Counter()  # harmless snippets that were destroyed
 
     for trace in data.traces:
         texts = [s["content"] for s in trace["steps"]]
@@ -139,6 +140,21 @@ def score(data: Dataset, scrub_many: Callable[[list[str]], list[str]], name: str
                     misses.append({**item, "survivors": survivors, "scrubbed": scrubbed})
 
             chars["destroyed"] += unmatched  # non-sensitive characters that are gone
+            if keep_misses and unmatched:
+                sensitive = bytearray(len(original))
+                for item in data.truth.get(key, ()):
+                    for a, b in item["spans"]:
+                        sensitive[a:b] = b"\x01" * (b - a)
+                i = 0
+                while i < len(original):
+                    if keep[i] == GONE and not sensitive[i]:
+                        j = i
+                        while j < len(original) and keep[j] == GONE and not sensitive[j]:
+                            j += 1
+                        collateral[original[i:j]] += 1
+                        i = j
+                    else:
+                        i += 1
 
             for decoy in data.decoys.get(key, ()):
                 decoys[decoy["type"]] += 1
@@ -172,5 +188,5 @@ def score(data: Dataset, scrub_many: Callable[[list[str]], list[str]], name: str
         "counts": {"chars": dict(chars), "items": dict(sorted(items.items())), "variants": dict(sorted(variants.items())), "decoys": sum(decoys.values()), "python_steps": python_total},
     }
     if keep_misses:
-        result["misses"], result["false_positives"] = misses, false_positives
+        result["misses"], result["false_positives"], result["collateral"] = misses, false_positives, collateral
     return result
