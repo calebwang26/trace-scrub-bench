@@ -41,13 +41,15 @@ Held-out test split: 1,015 traces (1,000 generated + 15 hand-written), 3,423 pla
 
 | scrubber | severity-weighted score | recall | precision | utility kept | decoys kept | Python still parses | adversarial recall | traces/sec |
 |---|---|---|---|---|---|---|---|---|
-| **regex+entropy-v2** (this repo) | 98.4% | 98.1% | 95.9% | 99.93% | 95.0% | 100.0% | 58.6% | ~120 |
-| v2-without-entropy (ablation) | 98.2% | 98.0% | 100.0% | 100.00% | 100.0% | 100.0% | 51.7% | ~200 |
-| **regex-v1** (this repo) | 67.0% | 68.1% | 85.8% | 99.80% | 56.5% | 100.0% | 17.2% | ~390 |
-| gitleaks (third party) | 37.5% | 21.4% | 94.7% | 99.94% | 100.0% | 100.0% | 20.7% | ~22 |
-| presidio (third party) | 18.4% | 34.5% | 13.3% | 98.93% | 75.1% | 41.0% | 24.1% | ~1.6 |
+| **regex+entropy-v2** (this repo) | 98.4% | 98.1% (97.6 to 98.6) | 95.9% | 99.93% | 95.0% | 100.0% | 58.6% (37.9 to 78.6) | ~180 |
+| v2-without-entropy (ablation) | 98.2% | 98.0% (97.4 to 98.5) | 100.0% | 100.00% | 100.0% | 100.0% | 51.7% (31.0 to 70.4) | ~200 |
+| **regex-v1** (this repo) | 67.0% | 68.1% (66.7 to 69.5) | 85.8% | 99.80% | 56.5% | 100.0% | 17.2% (3.7 to 33.3) | ~580 |
+| gitleaks (third party) | 37.5% | 21.4% (19.8 to 23.1) | 94.7% | 99.94% | 100.0% | 100.0% | 20.7% (3.6 to 44.0) | ~24 |
+| presidio (third party) | 18.4% | 34.5% (32.7 to 36.2) | 13.3% | 98.93% | 75.1% | 41.0% | 24.1% (0.0 to 46.4) | ~1.8 |
 | do-nothing (baseline) | 0.0% | 0.0% | n/a | 100.00% | 100.0% | 100.0% | 0.0% | n/a |
 | redact-everything (baseline) | 100.0% | 100.0% | 1.5% | 0.00% | 0.0% | 0.0% | 100.0% | n/a |
+
+The ranges in brackets are 95% confidence intervals from a bootstrap over traces: redraw the traces 2,000 times, rescore, & take the middle 95%. They show how much a score would move on a different random draw of traces from the same generator, nothing more.
 
 ![Recall by type & by how the item was hidden](bench/plots/recall_heatmap.png)
 
@@ -55,7 +57,7 @@ Held-out test split: 1,015 traces (1,000 generated + 15 hand-written), 3,423 pla
 
 **The answer, in three parts.**
 
-**How much do scrubbers miss?** The obvious scrubber, one regex per type, misses about a third: 31.9% of planted items & 33.0% of severity-weighted risk. After tuning, v2 misses 1.9% of the test split overall. Split by origin, that is 1.5% of the items in held-out generated traces (52 of 3,394) but **41% of the items in the hand-written traces** (12 of 29), whose formats it had never seen. That second number is the more honest estimate of what happens on unfamiliar data.
+**How much do scrubbers miss?** The obvious scrubber, one regex per type, misses about a third: 31.9% of planted items & 33.0% of severity-weighted risk. After tuning, v2 misses 1.9% of the test split overall. Split by origin, that is 1.5% of the items in held-out generated traces (52 of 3,394) but **41% of the items in the hand-written traces** (12 of 29), whose formats it had never seen. That second number is the more honest estimate of what happens on unfamiliar data, & with only 29 items it is a rough one: the interval for v2's recall there runs from 37.9% to 78.6%.
 
 **Which kinds slip through?**
 - v1 caught **none** of the secrets split over two lines, **none** of the base64-encoded ones, **none** of the personal names, & only 30% of `.env` secrets (it expected `NAME=value` at the start of a line) & 58% of OpenAI-style keys (its pattern stopped at the `-` in `sk-proj-...`).
@@ -69,17 +71,18 @@ Held-out test split: 1,015 traces (1,000 generated + 15 hand-written), 3,423 pla
 
 **The trade-off, with the baselines as anchors:** redact-everything proves recall alone is meaningless (100% recall, 0% utility, 1.5% precision, because only 1.5% of all characters are sensitive). do-nothing proves utility alone is meaningless. A scrubber is only useful near the top right corner of the second plot.
 
-**A result I did not expect: the entropy detector barely earns its place.** The `v2-without-entropy` row is v2 with that one detector switched off. On the test split it loses 0.1 points of recall (98.0% vs 98.1%) & gains everything v2 gives up in precision (100.0% vs 95.9%) & decoys (100.0% vs 95.0%). The rules that identify a secret by its variable name, or by decoding base64 & looking inside, already catch almost everything entropy catches, without the false positives. Entropy only pays off on unfamiliar formats: 17 of 29 adversarial items with it, 15 without (it caught a `gho_` token & a doubly base64-encoded token that no named rule knew). I left v2 as it was: the test split had already been run, & switching to the better-looking variant afterwards would be tuning on the test set.
+**A result I did not expect: the entropy detector barely earns its place.** The `v2-without-entropy` row is v2 with that one detector switched off. On the test split it loses 0.1 points of recall (98.0% vs 98.1%) & gains everything v2 gives up in precision (100.0% vs 95.9%) & decoys (100.0% vs 95.0%). The rules that identify a secret by its variable name, or by decoding base64 & looking inside, already catch almost everything entropy catches, without the false positives. The one place it helped is unfamiliar formats: 17 of 29 adversarial items with it, 15 without (it caught a `gho_` token & a doubly base64-encoded token that no named rule knew). Two items is far too few to call: the two intervals overlap almost completely. So on this evidence the detector's cost is measured & its benefit is not. I left v2 as it was: the test split had already been run, & switching to the better-looking variant afterwards would be tuning on the test set.
 
 **Two smaller findings.**
-- A delivered sample is not automatically clean. Running the full pipeline (`make all`) scrubs 2,000 traces with v2 & draws a stratified sample of 200. Three `FAKE`-marked strings survive in that sample. With recall below 100%, a sample card should state the scrubber's measured miss rate, not claim the data is clean.
+- A delivered sample is not automatically clean. Running the full pipeline (`make all`) scrubs 2,000 traces with v2 & draws a stratified sample of 200. Three `FAKE`-marked strings survive in that sample. So the sample card states the scrubber's measured miss rate ("expect about 1.9% of sensitive items to remain ... scrubbed, not guaranteed clean") & does not call the data clean.
 - The stratified sample matches the full set closely: 52.0% success rate vs 52.1%, 75.5% with a repo vs 75.9%, & no stratum off by more than 0.25 percentage points.
 
 ## 5. Limitations
 
 - **The data is synthetic & template-based.** A few dozen templates stand in for the endless variety of real traces. Scores on the generated split are an upper bound, not an estimate for real data.
 - **The same author wrote the generator, the adversarial traces & the scrubber.** v2 was tuned only on dev-split output, but it can't be blind to how the generator was designed. The 98.1% is flattered by that; the 58.6% on hand-written traces is closer to reality, & even those were written by the same person.
-- **The adversarial set is tiny.** 29 items: one item is 3.4 percentage points. The 58.6% has a wide margin of error & no confidence interval is reported.
+- **The adversarial set is tiny.** 29 items in 15 traces: one item is 3.4 percentage points, & the 95% interval for v2's 58.6% runs from 37.9% to 78.6%.
+- **The confidence intervals cover only one kind of uncertainty:** which traces happened to be drawn. They say nothing about the larger question of how different real traces are from generated ones.
 - **Synthetic safety markers change how third-party tools behave.** Presidio scored **0% on emails only because of this benchmark's reserved domains**: it rejects addresses whose top-level domain is not on the public list. With `.example` / `.test` swapped for `.com` / `.org` it removed 610 of 610 (`python -m bench.adapters.presidio_tld_check`). For the same reason it is charged with "damaging" decoys like `user@example.com`. Gitleaks may be affected by the `FAKE` marker in ways not measured here. The third-party rows are a fair comparison only for types these safety choices don't touch.
 - **Presidio ran with spaCy's small English model**, not its default large one, so its name recall (58%) understates Presidio at its best.
 - **"Utility kept" is a character count.** It says nothing about whether a scrubbed trace is still useful for training. Decoys kept & Python-still-parses are closer, but neither measures downstream value.
@@ -92,7 +95,7 @@ Held-out test split: 1,015 traces (1,000 generated + 15 hand-written), 3,423 pla
 ## 6. What I'd try next
 
 - **Plant into real traces.** Take public agent trajectories & insert the planted items into real content, so the surrounding text is no longer template-made.
-- **A red-team adversarial set written by someone else**, & large enough (several hundred items) for confidence intervals, with bootstrap intervals on every leaderboard number.
+- **A red-team adversarial set written by someone else**, & large enough (several hundred items) that its confidence interval is narrow enough to act on.
 - **Combine the specialists.** v2 for secrets, a named-entity model for names in prose, Presidio's phone recognizer for unusual formats. The case-by-case table suggests they miss different things.
 - **Read Python as Python.** v2 reads JSON as JSON, which fixed every escaped-JSON miss. The same idea with Python's `ast` module would catch short secrets split across string literals.
 - **A downstream utility test:** can a task still be replayed from its scrubbed trace?
@@ -109,7 +112,7 @@ make all
 
 `make all` runs the tests, generates the 2,000-trace dataset, prints its statistics, scrubs it with v2, draws a stratified sample with a sample card (`outputs/sample/`), rebuilds the benchmark splits, verifies their checksums & scores every registered scrubber into `bench/LEADERBOARD.md`. From a fresh clone it takes about a minute & a half.
 
-The two third-party entries are optional & are skipped (with a note in the leaderboard) when they are not installed. The committed leaderboard was produced with both:
+The two third-party entries are optional. When one is not installed, its row keeps the saved result from the last run that had it, & the leaderboard says so. The committed leaderboard was produced with both:
 
 ```bash
 brew install gitleaks                                 # Gitleaks 8.30.1
