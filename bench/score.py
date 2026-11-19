@@ -22,7 +22,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable
 
-from bench.align import surviving
+from bench.align import GONE, SOLID, surviving
 
 # How bad is a leak of each type? Private keys & cloud keys give direct access
 # to infrastructure. API tokens & passwords give access to one service.
@@ -96,7 +96,7 @@ def score(data: Dataset, scrub_many: Callable[[list[str]], list[str]], name: str
     scrubbed texts in the same order.
     """
     seconds = 0.0
-    chars = Counter()  # total, sensitive, removed, removed_sensitive
+    chars = Counter()  # total, sensitive, removed_sensitive, destroyed (non-sensitive characters lost)
     items, removed_items = Counter(), Counter()  # by type
     variants, removed_variants = Counter(), Counter()
     weight_total = weight_removed = 0
@@ -117,11 +117,13 @@ def score(data: Dataset, scrub_many: Callable[[list[str]], list[str]], name: str
             key = (trace["trace_id"], step)
             keep = surviving(original, scrubbed)
             chars["total"] += len(original)
-            chars["removed"] += len(original) - keep.count(1)
+            unmatched = keep.count(GONE)  # harmless text: any match counts as kept
 
             for item in data.truth.get(key, ()):
                 length = sum(b - a for a, b in item["spans"])
-                survivors = sum(keep[a:b].count(1) for a, b in item["spans"])
+                # planted items: only solid matches count as leaked (see align.py)
+                survivors = sum(keep[a:b].count(SOLID) for a, b in item["spans"])
+                unmatched -= sum(keep[a:b].count(GONE) for a, b in item["spans"])
                 chars["sensitive"] += length
                 chars["removed_sensitive"] += length - survivors
                 gone = survivors <= allowed_survivors(length)
@@ -136,9 +138,11 @@ def score(data: Dataset, scrub_many: Callable[[list[str]], list[str]], name: str
                 elif keep_misses:
                     misses.append({**item, "survivors": survivors, "scrubbed": scrubbed})
 
+            chars["destroyed"] += unmatched  # non-sensitive characters that are gone
+
             for decoy in data.decoys.get(key, ()):
                 decoys[decoy["type"]] += 1
-                intact = all(keep[a:b].count(0) == 0 for a, b in decoy["spans"])
+                intact = all(keep[a:b].count(GONE) == 0 for a, b in decoy["spans"])
                 decoys_kept[decoy["type"]] += intact
                 if keep_misses and not intact:
                     false_positives.append({**decoy, "scrubbed": scrubbed})
@@ -149,7 +153,8 @@ def score(data: Dataset, scrub_many: Callable[[list[str]], list[str]], name: str
 
     n_items = sum(items.values())
     non_sensitive = chars["total"] - chars["sensitive"]
-    destroyed = chars["removed"] - chars["removed_sensitive"]
+    destroyed = chars["destroyed"]
+    chars["removed"] = chars["removed_sensitive"] + destroyed
     result = {
         "name": name,
         "n_traces": len(data.traces),
