@@ -7,8 +7,9 @@ import pytest
 from scrubber.scrub import find_spans, redact, rule, scrub_trace, scrub_v1
 
 AWS = "AKIAFAKE7Q2MXP4RTZ1L"
-GH = "ghp_FAKEn4Jq8Zr2Lw6Tb0Xc5Vd9Ys3Ku7Pm1Ha4Gf"
+GH = "ghp_FAKEn4Jq8Zr2Lw6Tb0Xc5Vd9Ys3Ku7Pm1Ha4"  # ghp_ + 36 characters
 SK = "sk-FAKEa8Jd72kLq0Zx5Vb3Nm9Rt6Yw1Pc4Hg7Ue2Is"
+assert len(GH) == 40 and len(AWS) == 20
 
 
 @pytest.mark.parametrize(
