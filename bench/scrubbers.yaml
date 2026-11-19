@@ -13,3 +13,7 @@ scrubbers:
   - name: regex-v1
     entry: scrubber.scrub:scrub_v1
     description: This repo's scrubber, version 1. One regex per type.
+
+  - name: regex+entropy-v2
+    entry: scrubber.scrub:scrub_v2
+    description: This repo's scrubber, version 2. Regex + entropy + fixes found on the dev split.
