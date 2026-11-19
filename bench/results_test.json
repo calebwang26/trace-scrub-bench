@@ -89,7 +89,125 @@
       },
       "description": "This repo's scrubber, version 2. Regex + entropy + fixes found on the dev split.",
       "note": "",
-      "balance": 0.991774612688944
+      "balance": 0.991774612688944,
+      "adversarial_cases": {
+        "adv-01-query-param": {
+          "items": 1,
+          "removed": 1,
+          "weight": 7,
+          "weight_removed": 7,
+          "adversarial": 1,
+          "adversarial_removed": 1
+        },
+        "adv-02-hex-dump": {
+          "items": 1,
+          "removed": 0,
+          "weight": 7,
+          "weight_removed": 0,
+          "adversarial": 1,
+          "adversarial_removed": 0
+        },
+        "adv-03-new-github-formats": {
+          "items": 2,
+          "removed": 2,
+          "weight": 14,
+          "weight_removed": 14,
+          "adversarial": 2,
+          "adversarial_removed": 2
+        },
+        "adv-04-aws-temporary-credentials": {
+          "items": 2,
+          "removed": 2,
+          "weight": 20,
+          "weight_removed": 20,
+          "adversarial": 2,
+          "adversarial_removed": 2
+        },
+        "adv-05-other-key-headers": {
+          "items": 2,
+          "removed": 1,
+          "weight": 20,
+          "weight_removed": 10,
+          "adversarial": 2,
+          "adversarial_removed": 1
+        },
+        "adv-06-wrapped-jwt": {
+          "items": 1,
+          "removed": 0,
+          "weight": 7,
+          "weight_removed": 0,
+          "adversarial": 1,
+          "adversarial_removed": 0
+        },
+        "adv-07-database-credentials-without-a-url": {
+          "items": 3,
+          "removed": 2,
+          "weight": 21,
+          "weight_removed": 14,
+          "adversarial": 3,
+          "adversarial_removed": 2
+        },
+        "adv-08-unusual-secret-names": {
+          "items": 3,
+          "removed": 3,
+          "weight": 21,
+          "weight_removed": 21,
+          "adversarial": 3,
+          "adversarial_removed": 3
+        },
+        "adv-09-python-repr": {
+          "items": 1,
+          "removed": 1,
+          "weight": 7,
+          "weight_removed": 7,
+          "adversarial": 1,
+          "adversarial_removed": 1
+        },
+        "adv-10-double-base64": {
+          "items": 1,
+          "removed": 1,
+          "weight": 7,
+          "weight_removed": 7,
+          "adversarial": 1,
+          "adversarial_removed": 1
+        },
+        "adv-11-obfuscated-emails": {
+          "items": 2,
+          "removed": 0,
+          "weight": 6,
+          "weight_removed": 0,
+          "adversarial": 2,
+          "adversarial_removed": 0
+        },
+        "adv-12-phone-formats": {
+          "items": 3,
+          "removed": 0,
+          "weight": 9,
+          "weight_removed": 0,
+          "adversarial": 3,
+          "adversarial_removed": 0
+        },
+        "adv-13-ip-shapes": {
+          "items": 3,
+          "removed": 2,
+          "weight": 3,
+          "weight_removed": 2,
+          "adversarial": 3,
+          "adversarial_removed": 2
+        },
+        "adv-14-names-in-prose": {
+          "items": 4,
+          "removed": 2,
+          "weight": 12,
+          "weight_removed": 6,
+          "adversarial": 4,
+          "adversarial_removed": 2
+        },
+        "adv-15-harmless-lookalikes": {
+          "decoys": 10,
+          "decoys_kept": 8
+        }
+      }
     },
     {
       "name": "v2-without-entropy",
@@ -178,7 +296,125 @@
       },
       "description": "Ablation. Version 2 with its entropy detector switched off, to show what that detector adds & costs.",
       "note": "",
-      "balance": 0.9907927554461774
+      "balance": 0.9907927554461774,
+      "adversarial_cases": {
+        "adv-01-query-param": {
+          "items": 1,
+          "removed": 1,
+          "weight": 7,
+          "weight_removed": 7,
+          "adversarial": 1,
+          "adversarial_removed": 1
+        },
+        "adv-02-hex-dump": {
+          "items": 1,
+          "removed": 0,
+          "weight": 7,
+          "weight_removed": 0,
+          "adversarial": 1,
+          "adversarial_removed": 0
+        },
+        "adv-03-new-github-formats": {
+          "items": 2,
+          "removed": 1,
+          "weight": 14,
+          "weight_removed": 7,
+          "adversarial": 2,
+          "adversarial_removed": 1
+        },
+        "adv-04-aws-temporary-credentials": {
+          "items": 2,
+          "removed": 2,
+          "weight": 20,
+          "weight_removed": 20,
+          "adversarial": 2,
+          "adversarial_removed": 2
+        },
+        "adv-05-other-key-headers": {
+          "items": 2,
+          "removed": 1,
+          "weight": 20,
+          "weight_removed": 10,
+          "adversarial": 2,
+          "adversarial_removed": 1
+        },
+        "adv-06-wrapped-jwt": {
+          "items": 1,
+          "removed": 0,
+          "weight": 7,
+          "weight_removed": 0,
+          "adversarial": 1,
+          "adversarial_removed": 0
+        },
+        "adv-07-database-credentials-without-a-url": {
+          "items": 3,
+          "removed": 2,
+          "weight": 21,
+          "weight_removed": 14,
+          "adversarial": 3,
+          "adversarial_removed": 2
+        },
+        "adv-08-unusual-secret-names": {
+          "items": 3,
+          "removed": 3,
+          "weight": 21,
+          "weight_removed": 21,
+          "adversarial": 3,
+          "adversarial_removed": 3
+        },
+        "adv-09-python-repr": {
+          "items": 1,
+          "removed": 1,
+          "weight": 7,
+          "weight_removed": 7,
+          "adversarial": 1,
+          "adversarial_removed": 1
+        },
+        "adv-10-double-base64": {
+          "items": 1,
+          "removed": 0,
+          "weight": 7,
+          "weight_removed": 0,
+          "adversarial": 1,
+          "adversarial_removed": 0
+        },
+        "adv-11-obfuscated-emails": {
+          "items": 2,
+          "removed": 0,
+          "weight": 6,
+          "weight_removed": 0,
+          "adversarial": 2,
+          "adversarial_removed": 0
+        },
+        "adv-12-phone-formats": {
+          "items": 3,
+          "removed": 0,
+          "weight": 9,
+          "weight_removed": 0,
+          "adversarial": 3,
+          "adversarial_removed": 0
+        },
+        "adv-13-ip-shapes": {
+          "items": 3,
+          "removed": 2,
+          "weight": 3,
+          "weight_removed": 2,
+          "adversarial": 3,
+          "adversarial_removed": 2
+        },
+        "adv-14-names-in-prose": {
+          "items": 4,
+          "removed": 2,
+          "weight": 12,
+          "weight_removed": 6,
+          "adversarial": 4,
+          "adversarial_removed": 2
+        },
+        "adv-15-harmless-lookalikes": {
+          "decoys": 10,
+          "decoys_kept": 9
+        }
+      }
     },
     {
       "name": "regex-v1",
@@ -267,7 +503,125 @@
       },
       "description": "This repo's scrubber, version 1. One regex per type.",
       "note": "",
-      "balance": 0.8014866439147552
+      "balance": 0.8014866439147552,
+      "adversarial_cases": {
+        "adv-01-query-param": {
+          "items": 1,
+          "removed": 1,
+          "weight": 7,
+          "weight_removed": 7,
+          "adversarial": 1,
+          "adversarial_removed": 1
+        },
+        "adv-02-hex-dump": {
+          "items": 1,
+          "removed": 0,
+          "weight": 7,
+          "weight_removed": 0,
+          "adversarial": 1,
+          "adversarial_removed": 0
+        },
+        "adv-03-new-github-formats": {
+          "items": 2,
+          "removed": 0,
+          "weight": 14,
+          "weight_removed": 0,
+          "adversarial": 2,
+          "adversarial_removed": 0
+        },
+        "adv-04-aws-temporary-credentials": {
+          "items": 2,
+          "removed": 0,
+          "weight": 20,
+          "weight_removed": 0,
+          "adversarial": 2,
+          "adversarial_removed": 0
+        },
+        "adv-05-other-key-headers": {
+          "items": 2,
+          "removed": 1,
+          "weight": 20,
+          "weight_removed": 10,
+          "adversarial": 2,
+          "adversarial_removed": 1
+        },
+        "adv-06-wrapped-jwt": {
+          "items": 1,
+          "removed": 0,
+          "weight": 7,
+          "weight_removed": 0,
+          "adversarial": 1,
+          "adversarial_removed": 0
+        },
+        "adv-07-database-credentials-without-a-url": {
+          "items": 3,
+          "removed": 0,
+          "weight": 21,
+          "weight_removed": 0,
+          "adversarial": 3,
+          "adversarial_removed": 0
+        },
+        "adv-08-unusual-secret-names": {
+          "items": 3,
+          "removed": 0,
+          "weight": 21,
+          "weight_removed": 0,
+          "adversarial": 3,
+          "adversarial_removed": 0
+        },
+        "adv-09-python-repr": {
+          "items": 1,
+          "removed": 0,
+          "weight": 7,
+          "weight_removed": 0,
+          "adversarial": 1,
+          "adversarial_removed": 0
+        },
+        "adv-10-double-base64": {
+          "items": 1,
+          "removed": 0,
+          "weight": 7,
+          "weight_removed": 0,
+          "adversarial": 1,
+          "adversarial_removed": 0
+        },
+        "adv-11-obfuscated-emails": {
+          "items": 2,
+          "removed": 0,
+          "weight": 6,
+          "weight_removed": 0,
+          "adversarial": 2,
+          "adversarial_removed": 0
+        },
+        "adv-12-phone-formats": {
+          "items": 3,
+          "removed": 0,
+          "weight": 9,
+          "weight_removed": 0,
+          "adversarial": 3,
+          "adversarial_removed": 0
+        },
+        "adv-13-ip-shapes": {
+          "items": 3,
+          "removed": 2,
+          "weight": 3,
+          "weight_removed": 2,
+          "adversarial": 3,
+          "adversarial_removed": 2
+        },
+        "adv-14-names-in-prose": {
+          "items": 4,
+          "removed": 1,
+          "weight": 12,
+          "weight_removed": 3,
+          "adversarial": 4,
+          "adversarial_removed": 1
+        },
+        "adv-15-harmless-lookalikes": {
+          "decoys": 10,
+          "decoys_kept": 6
+        }
+      }
     },
     {
       "name": "gitleaks",
@@ -356,7 +710,125 @@
       },
       "description": "Third party. Gitleaks 8 secret scanner with its default rules; findings are replaced by a placeholder.",
       "note": "Gitleaks is a secret scanner. It has no rules for emails, phone numbers, IP addresses or names, so its 0% on those four types is by design, & its overall recall should be read next to its recall on secrets only.",
-      "balance": 0.5454650236907185
+      "balance": 0.5454650236907185,
+      "adversarial_cases": {
+        "adv-01-query-param": {
+          "items": 1,
+          "removed": 0,
+          "weight": 7,
+          "weight_removed": 0,
+          "adversarial": 1,
+          "adversarial_removed": 0
+        },
+        "adv-02-hex-dump": {
+          "items": 1,
+          "removed": 0,
+          "weight": 7,
+          "weight_removed": 0,
+          "adversarial": 1,
+          "adversarial_removed": 0
+        },
+        "adv-03-new-github-formats": {
+          "items": 2,
+          "removed": 2,
+          "weight": 14,
+          "weight_removed": 14,
+          "adversarial": 2,
+          "adversarial_removed": 2
+        },
+        "adv-04-aws-temporary-credentials": {
+          "items": 2,
+          "removed": 1,
+          "weight": 20,
+          "weight_removed": 10,
+          "adversarial": 2,
+          "adversarial_removed": 1
+        },
+        "adv-05-other-key-headers": {
+          "items": 2,
+          "removed": 2,
+          "weight": 20,
+          "weight_removed": 20,
+          "adversarial": 2,
+          "adversarial_removed": 2
+        },
+        "adv-06-wrapped-jwt": {
+          "items": 1,
+          "removed": 0,
+          "weight": 7,
+          "weight_removed": 0,
+          "adversarial": 1,
+          "adversarial_removed": 0
+        },
+        "adv-07-database-credentials-without-a-url": {
+          "items": 3,
+          "removed": 0,
+          "weight": 21,
+          "weight_removed": 0,
+          "adversarial": 3,
+          "adversarial_removed": 0
+        },
+        "adv-08-unusual-secret-names": {
+          "items": 3,
+          "removed": 0,
+          "weight": 21,
+          "weight_removed": 0,
+          "adversarial": 3,
+          "adversarial_removed": 0
+        },
+        "adv-09-python-repr": {
+          "items": 1,
+          "removed": 0,
+          "weight": 7,
+          "weight_removed": 0,
+          "adversarial": 1,
+          "adversarial_removed": 0
+        },
+        "adv-10-double-base64": {
+          "items": 1,
+          "removed": 1,
+          "weight": 7,
+          "weight_removed": 7,
+          "adversarial": 1,
+          "adversarial_removed": 1
+        },
+        "adv-11-obfuscated-emails": {
+          "items": 2,
+          "removed": 0,
+          "weight": 6,
+          "weight_removed": 0,
+          "adversarial": 2,
+          "adversarial_removed": 0
+        },
+        "adv-12-phone-formats": {
+          "items": 3,
+          "removed": 0,
+          "weight": 9,
+          "weight_removed": 0,
+          "adversarial": 3,
+          "adversarial_removed": 0
+        },
+        "adv-13-ip-shapes": {
+          "items": 3,
+          "removed": 0,
+          "weight": 3,
+          "weight_removed": 0,
+          "adversarial": 3,
+          "adversarial_removed": 0
+        },
+        "adv-14-names-in-prose": {
+          "items": 4,
+          "removed": 0,
+          "weight": 12,
+          "weight_removed": 0,
+          "adversarial": 4,
+          "adversarial_removed": 0
+        },
+        "adv-15-harmless-lookalikes": {
+          "decoys": 10,
+          "decoys_kept": 10
+        }
+      }
     },
     {
       "name": "presidio",
@@ -445,7 +917,125 @@
       },
       "description": "Third party. Microsoft Presidio for emails, phones, IPs & names, with spaCy's small English model.",
       "note": "Presidio's 0% on emails is an artifact of this benchmark, not of Presidio. Every synthetic email here ends in a reserved top-level domain (.example or .test) so it can never belong to a real person, & Presidio rejects addresses whose top-level domain is not on the public list. With the endings swapped for .com / .org, Presidio removed 610 of 610 test-split emails (python -m bench.adapters.presidio_tld_check). For the same reason it \"damages\" the example-email decoys such as user@example.com. Its name detection uses the small spaCy model.",
-      "balance": 0.3102561818602329
+      "balance": 0.3102561818602329,
+      "adversarial_cases": {
+        "adv-01-query-param": {
+          "items": 1,
+          "removed": 0,
+          "weight": 7,
+          "weight_removed": 0,
+          "adversarial": 1,
+          "adversarial_removed": 0
+        },
+        "adv-02-hex-dump": {
+          "items": 1,
+          "removed": 0,
+          "weight": 7,
+          "weight_removed": 0,
+          "adversarial": 1,
+          "adversarial_removed": 0
+        },
+        "adv-03-new-github-formats": {
+          "items": 2,
+          "removed": 0,
+          "weight": 14,
+          "weight_removed": 0,
+          "adversarial": 2,
+          "adversarial_removed": 0
+        },
+        "adv-04-aws-temporary-credentials": {
+          "items": 2,
+          "removed": 0,
+          "weight": 20,
+          "weight_removed": 0,
+          "adversarial": 2,
+          "adversarial_removed": 0
+        },
+        "adv-05-other-key-headers": {
+          "items": 2,
+          "removed": 0,
+          "weight": 20,
+          "weight_removed": 0,
+          "adversarial": 2,
+          "adversarial_removed": 0
+        },
+        "adv-06-wrapped-jwt": {
+          "items": 1,
+          "removed": 0,
+          "weight": 7,
+          "weight_removed": 0,
+          "adversarial": 1,
+          "adversarial_removed": 0
+        },
+        "adv-07-database-credentials-without-a-url": {
+          "items": 3,
+          "removed": 0,
+          "weight": 21,
+          "weight_removed": 0,
+          "adversarial": 3,
+          "adversarial_removed": 0
+        },
+        "adv-08-unusual-secret-names": {
+          "items": 3,
+          "removed": 0,
+          "weight": 21,
+          "weight_removed": 0,
+          "adversarial": 3,
+          "adversarial_removed": 0
+        },
+        "adv-09-python-repr": {
+          "items": 1,
+          "removed": 0,
+          "weight": 7,
+          "weight_removed": 0,
+          "adversarial": 1,
+          "adversarial_removed": 0
+        },
+        "adv-10-double-base64": {
+          "items": 1,
+          "removed": 0,
+          "weight": 7,
+          "weight_removed": 0,
+          "adversarial": 1,
+          "adversarial_removed": 0
+        },
+        "adv-11-obfuscated-emails": {
+          "items": 2,
+          "removed": 0,
+          "weight": 6,
+          "weight_removed": 0,
+          "adversarial": 2,
+          "adversarial_removed": 0
+        },
+        "adv-12-phone-formats": {
+          "items": 3,
+          "removed": 3,
+          "weight": 9,
+          "weight_removed": 9,
+          "adversarial": 3,
+          "adversarial_removed": 3
+        },
+        "adv-13-ip-shapes": {
+          "items": 3,
+          "removed": 2,
+          "weight": 3,
+          "weight_removed": 2,
+          "adversarial": 3,
+          "adversarial_removed": 2
+        },
+        "adv-14-names-in-prose": {
+          "items": 4,
+          "removed": 2,
+          "weight": 12,
+          "weight_removed": 6,
+          "adversarial": 4,
+          "adversarial_removed": 2
+        },
+        "adv-15-harmless-lookalikes": {
+          "decoys": 10,
+          "decoys_kept": 9
+        }
+      }
     },
     {
       "name": "do-nothing",
@@ -457,7 +1047,7 @@
       "utility_kept": 1.0,
       "decoys_kept": 1.0,
       "python_kept": 1.0,
-      "traces_per_sec": 473434.27565038693,
+      "traces_per_sec": 472046.97408322536,
       "recall_ci": [
         0.0,
         0.0
