@@ -140,3 +140,9 @@ Every scrubber was frozen before this run. Nothing in `scrubber/` was changed af
 - **Decision:** `bench.run --only NAME --merge` scores one entry & merges it into the saved results, so adding a scrubber doesn't require re-running the slow ones.
 - `make all` now runs the whole project: tests, Part A pipeline (generate → stats → scrub → stratified sample) & Part B (splits, checksums, leaderboard).
 - **A small finding from the Part A pipeline:** in the 200-trace sample drawn from the v2-scrubbed dataset, 3 `FAKE`-marked strings survive. A delivered sample is only as clean as the scrubber's recall.
+
+## Step 11: README, EXPLAIN & the pre-publish checklist
+
+- `README.md` follows the required structure (question, why it matters, method, results, limitations, next steps, how to run). Every number in it is copied from `bench/LEADERBOARD.md`, `bench/results_test.json` or a command named next to it.
+- `EXPLAIN.md` has the file-by-file walkthrough & a written answer to each "defend it" question.
+- **Problem:** while writing an example for `EXPLAIN.md` I typed a share from memory (6.3%) & then checked it against the data: the real figure is 10.0%. Fixed before commit. Numbers in the docs are checked against output, not recalled.
