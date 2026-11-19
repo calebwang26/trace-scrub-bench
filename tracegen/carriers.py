@@ -59,7 +59,9 @@ def make_secret(rng: random.Random, type: str, special: bool = False) -> Secret:
         name, value = sensitive.env_secret(rng, special=special)
         return Secret(type, name, value)
     if type == "private_key":
-        return Secret(type, rng.choice(["TLS_PRIVATE_KEY", "DEPLOY_KEY", "SIGNING_PRIVATE_KEY"]), sensitive.private_key(rng))
+        name = rng.choice(["TLS_PRIVATE_KEY", "DEPLOY_KEY", "SIGNING_PRIVATE_KEY"])
+        header, body, footer = sensitive.private_key_parts(rng)
+        return Secret(type, name, body, header + "\n", "\n" + footer)  # the secret is the body, not the header lines
     raise ValueError(type)
 
 
@@ -154,8 +156,9 @@ def pem_file(rng, reg, v, s):
 
 def yaml_key_block(rng, reg, v, s):
     """A private key in a YAML block scalar: every line is indented."""
-    indented = s.value.replace("\n", "\n    ")
-    text = f"tls:\n  cert_path: /etc/{v.project}/tls.crt\n  key: |\n    {reg.plant(S, s.type, s.value, 'plain', 'yaml_key_block', text=indented)}\n  min_version: \"1.2\""
+    indent = lambda t: t.replace("\n", "\n    ")
+    body = reg.plant(S, s.type, s.value, "plain", "yaml_key_block", text=indent(s.value))
+    text = f"tls:\n  cert_path: /etc/{v.project}/tls.crt\n  key: |\n    {indent(s.before)}{body}{indent(s.after)}\n  min_version: \"1.2\""
     return [bash("cat config/tls.yaml"), result(text)]
 
 

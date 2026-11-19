@@ -69,7 +69,7 @@ def test_ground_truth_positions_are_exact(data):
         pieces = "".join(content[a:b] for a, b in r["spans"])
         if r["variant"] == "split":
             assert len(r["spans"]) == 2 and pieces == r["value"]
-        elif r["variant"] == "plain" and r["type"] != "private_key":
+        elif r["variant"] == "plain" and r["carrier"] != "yaml_key_block":  # that one indents every line
             assert pieces == r["value"]
 
 
@@ -77,6 +77,15 @@ def test_every_type_and_every_hard_variant_is_planted(data):
     _, manifest, _ = data
     assert set(manifest["sensitive_by_type"]) == set(TYPES)
     assert set(manifest["sensitive_by_variant"]) == {"plain", "split", "base64", "json_escaped"}
+
+
+def test_private_key_ground_truth_is_the_body_not_the_header(data):
+    """The BEGIN/END lines are public format markers. Only the key material is secret."""
+    folder, _, _ = data
+    rows = [r for r in _load(folder, "ground_truth.jsonl") if r["type"] == "private_key" and r["variant"] in ("plain", "json_escaped")]
+    assert rows
+    for r in rows:
+        assert "BEGIN" not in r["text"] and "END" not in r["text"] and r["text"].lstrip().startswith("MIIE")
 
 
 def test_python_steps_all_parse(data):
@@ -96,7 +105,7 @@ def test_nothing_sensitive_looking_is_left_unlabeled(data):
     labeled = defaultdict(list)
     for r in _load(folder, "ground_truth.jsonl") + _load(folder, "decoys.jsonl"):
         labeled[(r["trace_id"], r["step"])] += [tuple(s) for s in r["spans"]]
-    patterns = [r"[\w.+-]+@[\w-]+\.[\w.-]+", r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b", r"(?i)fake", r"AKIA", r"ghp_", r"\bsk-", r"555\D?01\d\d", r"BEGIN [A-Z ]*PRIVATE"]
+    patterns = [r"[\w.+-]+@[\w-]+\.[\w.-]+", r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b", r"(?i)fake", r"AKIA", r"ghp_", r"\bsk-", r"555\D?01\d\d", r"MIIE"]
     for t in traces.values():
         for i, s in enumerate(t["steps"]):
             spans = labeled.get((t["trace_id"], i), [])

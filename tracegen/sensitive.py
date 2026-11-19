@@ -91,15 +91,24 @@ def jwt(rng: random.Random) -> str:
     return f"{header}.{payload}.{signature}"
 
 
-def private_key(rng: random.Random) -> str:
-    """A PEM private-key block (header line, base64 body, footer line)."""
+def private_key_parts(rng: random.Random) -> tuple[str, str, str]:
+    """A PEM private-key block as (header line, base64 body, footer line).
+
+    Only the body is the secret. The header & footer are public format
+    markers: every RSA key in the world starts with the same line.
+    """
     label = rng.choice(["RSA ", "EC ", ""]) + "PRIVATE" + " KEY"
     n_lines = rng.randint(5, 12)
     lines = ["MIIE" + MARK + rand(rng, B64, 56)]
     lines += [rand(rng, B64, 64) for _ in range(n_lines - 1)]
     lines.append(rand(rng, B64, rng.randint(20, 60)) + "==")
     dashes = "-" * 5
-    return f"{dashes}BEGIN {label}{dashes}\n" + "\n".join(lines) + f"\n{dashes}END {label}{dashes}"
+    return f"{dashes}BEGIN {label}{dashes}", "\n".join(lines), f"{dashes}END {label}{dashes}"
+
+
+def private_key(rng: random.Random) -> str:
+    """The whole PEM block as one string."""
+    return "\n".join(private_key_parts(rng))
 
 
 _PW_WORDS = ["summer", "dragon", "orders", "prod", "falcon", "billing", "winter", "admin", "tiger", "staging"]
