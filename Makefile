@@ -24,7 +24,7 @@ scrub: data
 	$(PYTHON) -m scrubber.scrub --version v2 --in data/traces.jsonl --out outputs/traces.scrubbed.jsonl
 
 sample: scrub
-	$(PYTHON) -m scrubber.sample --in outputs/traces.scrubbed.jsonl --n 200 --seed 0 --out outputs/sample --scrubbed-with "scrubber v2 (regex + entropy)"
+	$(PYTHON) -m scrubber.sample --in outputs/traces.scrubbed.jsonl --n 200 --seed 0 --out outputs/sample --scrubbed-with "scrubber v2 (regex + entropy)" --bench-results bench/results_test.json --bench-entry regex+entropy-v2
 
 # Part B: rebuild the frozen splits, verify their checksums, score every scrubber.
 splits:

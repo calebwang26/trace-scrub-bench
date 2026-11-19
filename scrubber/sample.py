@@ -69,7 +69,32 @@ def max_deviation(full: list[dict], sample: list[dict]) -> float:
     return max(abs(a[s] - b.get(s, 0.0)) for s in a)
 
 
-def sample_card(full: list[dict], sample: list[dict], seed: int, source: str, scrubbed_with: str | None = None) -> str:
+def scrubbing_line(scrubbed_with: str | None, scores: dict | None) -> str:
+    """What the card says about scrubbing, including the scrubber's measured miss rate."""
+    if not scrubbed_with:
+        return "not scrubbed"
+    if not scores:
+        return f"{scrubbed_with}. Its miss rate was not measured, so treat the sample as possibly containing sensitive data."
+    miss = 100 * (1 - scores["recall"])
+    adversarial = scores.get("recall_by_variant", {}).get("adversarial")
+    line = (
+        f"{scrubbed_with}. On a held-out benchmark with planted items it removed {100 * scores['recall']:.1f}% of them "
+        f"(severity-weighted: {100 * scores['severity_score']:.1f}%), so expect about {miss:.1f}% of sensitive items to remain"
+    )
+    if adversarial is not None:
+        line += f", & more in unfamiliar formats (it removed {100 * adversarial:.1f}% of hand-written adversarial items)"
+    return line + ". **This sample is scrubbed, not guaranteed clean.**"
+
+
+def load_scores(path: str | None, name: str | None) -> dict | None:
+    """Read one scrubber's benchmark result from a results file written by the benchmark."""
+    if not path or not name or not Path(path).exists():
+        return None
+    results = json.loads(Path(path).read_text(encoding="utf-8"))["results"]
+    return next((r for r in results if r["name"] == name), None)
+
+
+def sample_card(full: list[dict], sample: list[dict], seed: int, source: str, scrubbed_with: str | None = None, scores: dict | None = None) -> str:
     """Markdown summary of the sample next to the full set."""
     fs, ss = compute(full), compute(sample)
     lines = [
@@ -78,7 +103,7 @@ def sample_card(full: list[dict], sample: list[dict], seed: int, source: str, sc
         f"- **Source:** `{source}` ({len(full):,} traces)",
         f"- **Sample:** {len(sample):,} traces ({pct(len(sample) / len(full))} of the source), seed {seed}",
         "- **Method:** stratified by model × outcome × has_repo, proportional allocation (largest remainder)",
-        f"- **Scrubbing:** {scrubbed_with or 'not scrubbed'}",
+        f"- **Scrubbing:** {scrubbing_line(scrubbed_with, scores)}",
         "- **Note:** all traces, secrets & personal data in this project are synthetic.",
         "",
         "## Key numbers",
@@ -114,6 +139,8 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--out", default="outputs/sample")
     parser.add_argument("--scrubbed-with", default=None, help="label of the scrubber already applied to the input")
+    parser.add_argument("--bench-results", default=None, help="benchmark results file, to state the scrubber's measured miss rate")
+    parser.add_argument("--bench-entry", default=None, help="the scrubber's name in that results file")
     args = parser.parse_args()
     full = load_traces(args.src)
     sample = stratified_sample(full, args.n, args.seed)
@@ -122,7 +149,7 @@ def main() -> None:
     with open(out / "sample.jsonl", "w", encoding="utf-8", newline="\n") as f:
         for t in sample:
             f.write(json.dumps(t, ensure_ascii=False) + "\n")
-    card = sample_card(full, sample, args.seed, args.src, args.scrubbed_with)
+    card = sample_card(full, sample, args.seed, args.src, args.scrubbed_with, load_scores(args.bench_results, args.bench_entry))
     (out / "SAMPLE_CARD.md").write_text(card, encoding="utf-8")
     print(card)
 
