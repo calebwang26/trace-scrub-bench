@@ -90,10 +90,10 @@ def other_key_headers(c: Case) -> None:
     dashes = "-" * 5
     openssh_body = "\n".join(["b3BlbnNzaC1rZXktdjEA" + MARK + _fill(B64, 46)] + [_fill(B64, 70) for _ in range(5)])
     openssh = f"{dashes}BEGIN OPENSSH PRIVATE" + f" KEY{dashes}\n{openssh_body}\n{dashes}END OPENSSH PRIVATE" + f" KEY{dashes}"
-    c.run("cat ~/.ssh/id_ed25519", c.secret("private_key", openssh))
+    c.run("cat ~/.ssh/id_ed25519", openssh.replace(openssh_body, c.secret("private_key", openssh_body)))
     pgp_body = "\n".join(["lQOYBG" + MARK + _fill(B64, 54)] + [_fill(B64, 64) for _ in range(4)] + ["=" + _fill(B64, 4)])
     pgp = f"{dashes}BEGIN PGP PRIVATE KEY" + f" BLOCK{dashes}\n\n{pgp_body}\n{dashes}END PGP PRIVATE KEY" + f" BLOCK{dashes}"
-    script = f"#!/bin/sh\ngpg --batch --import <<'EOF'\n{c.secret('private_key', pgp)}\nEOF\ngpg --list-secret-keys"
+    script = f"#!/bin/sh\ngpg --batch --import <<'EOF'\n{pgp.replace(pgp_body, c.secret('private_key', pgp_body))}\nEOF\ngpg --list-secret-keys"
     c.run("cat scripts/import-signing-key.sh", script)
 
 

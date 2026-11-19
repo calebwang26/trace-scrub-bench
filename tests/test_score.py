@@ -1,7 +1,7 @@
 """The scorer must give exactly the expected numbers on cases with a known answer."""
 import pytest
 
-from bench.align import surviving
+from bench.align import SOLID, WEAK, surviving
 from bench.baselines import do_nothing, redact_everything
 from bench.score import SEVERITY, Dataset, allowed_survivors, load_dataset, per_text, score
 from tracegen.generate import generate
@@ -61,6 +61,29 @@ def test_baselines_on_generated_data(generated):
     assert set(everything["recall_by_type"].values()) == {1.0}
     chars = everything["counts"]["chars"]
     assert everything["precision"] == chars["sensitive"] / chars["total"]
+
+
+def test_an_oracle_scrubber_scores_perfectly(generated):
+    """A scrubber that redacts exactly the planted spans must get 100% everywhere.
+
+    This is the end-to-end check on generator + scorer together: if the ground
+    truth or the alignment were off, the perfect scrubber would lose points.
+    """
+    truth_by_trace = iter([[generated.truth.get((t["trace_id"], i), []) for i in range(len(t["steps"]))] for t in generated.traces])
+
+    def oracle(texts):
+        out = []
+        for text, items in zip(texts, next(truth_by_trace)):
+            spans = sorted((a, b, item["type"]) for item in items for a, b in item["spans"])
+            for a, b, type in reversed(spans):
+                text = text[:a] + f"[REDACTED_{type.upper()}]" + text[b:]
+            out.append(text)
+        return out
+
+    r = score(generated, oracle, keep_misses=True)
+    assert [(m["type"], m["carrier"]) for m in r["misses"]] == []
+    assert (r["recall"], r["severity_score"], r["precision"], r["utility_kept"], r["decoys_kept"]) == (1, 1, 1, 1, 1)
+    assert r["python_kept"] > 0.95  # a few secrets are split across two string literals
 
 
 # --- a hand-made example with a known answer -----------------------------------
@@ -132,7 +155,7 @@ def test_a_damaged_decoy_and_broken_python_are_counted():
 # --- alignment ------------------------------------------------------------------
 
 def test_unchanged_text_survives_completely():
-    assert surviving("abc\ndef", "abc\ndef") == bytearray(b"\x01" * 7)
+    assert surviving("abc\ndef", "abc\ndef") == bytearray([SOLID]) * 7
 
 
 def test_only_the_replaced_span_is_marked_removed():
@@ -148,8 +171,20 @@ def test_multi_line_block_replaced_by_one_placeholder():
     original = f"before\n{block}\nafter\n"
     keep = surviving(original, "before\n[REDACTED_PRIVATE_KEY]\nafter\n")
     start = original.index(block)
-    assert keep[start : start + len(block)].count(1) == 0
-    assert keep.count(0) == len(block)
+    assert keep[start : start + len(block)].count(SOLID) == 0
+    assert keep[: start].count(SOLID) == start
+
+
+def test_short_matches_are_weak_and_long_ones_solid():
+    """` <` between two redactions really survived; `KE` inside a redacted key is a coincidence."""
+    original = "Author: Greta Dubois <greta@fakecorp.example> key AKIAFAKE7Q2MXP4RTZ1L"
+    scrubbed = "Author: [REDACTED_PERSON_NAME] <[REDACTED_EMAIL]> key [REDACTED_AWS_KEY]"
+    keep = surviving(original, scrubbed)
+    gap = original.index(" <")
+    assert keep[gap : gap + 2] == bytearray([WEAK, WEAK])
+    key = original.index("AKIA")
+    assert keep[key:].count(SOLID) == 0  # nothing of the key counts as leaked
+    assert keep[original.index("> key ") : key] == bytearray([SOLID]) * 6
 
 
 def test_a_scrubber_must_return_one_string_per_text():

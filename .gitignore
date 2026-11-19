@@ -26,3 +26,6 @@ outputs/
 .DS_Store
 .idea/
 .vscode/
+
+# dev-split results are scratch output for tuning; only test-split results are published
+bench/results_dev.json
