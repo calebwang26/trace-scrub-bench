@@ -1,0 +1,11 @@
+# Every scrubber on the leaderboard is registered here.
+# `entry` is module:function for a Python scrubber, `command` is a stdin->stdout tool.
+# `optional: true` entries are skipped (with a note) when their dependencies are missing.
+scrubbers:
+  - name: do-nothing
+    entry: bench.baselines:do_nothing
+    description: Baseline. Returns the text unchanged.
+
+  - name: redact-everything
+    entry: bench.baselines:redact_everything
+    description: Baseline. Replaces the whole text with one block character.
