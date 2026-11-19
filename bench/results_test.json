@@ -3,6 +3,391 @@
   "skipped": [],
   "results": [
     {
+      "name": "regex+entropy-v2",
+      "n_traces": 1015,
+      "n_items": 3423,
+      "recall": 0.981302950628104,
+      "severity_score": 0.9843177935074444,
+      "precision": 0.9591364727456293,
+      "utility_kept": 0.9993452743798016,
+      "decoys_kept": 0.9499079189686924,
+      "python_kept": 1.0,
+      "traces_per_sec": 120.12032230068895,
+      "recall_by_type": {
+        "aws_key": 1.0,
+        "db_password": 0.9946236559139785,
+        "email": 0.9967373572593801,
+        "env_secret": 0.9566787003610109,
+        "github_token": 0.994535519125683,
+        "ipv4": 0.9973890339425587,
+        "jwt": 0.9938650306748467,
+        "openai_key": 1.0,
+        "person_name": 0.9330143540669856,
+        "phone": 0.9922480620155039,
+        "private_key": 0.9926470588235294
+      },
+      "recall_by_variant": {
+        "adversarial": 0.5862068965517241,
+        "base64": 1.0,
+        "json_escaped": 1.0,
+        "plain": 0.9866666666666667,
+        "split": 0.9008264462809917
+      },
+      "decoys_kept_by_type": {
+        "adversarial": 0.8,
+        "b64_blob": 0.5018587360594795,
+        "doc_example_key": 1.0,
+        "env_placeholder": 1.0,
+        "example_email": 1.0,
+        "git_sha": 1.0,
+        "safe_ip": 1.0,
+        "sha256": 1.0,
+        "uuid": 1.0
+      },
+      "counts": {
+        "chars": {
+          "total": 12303836,
+          "destroyed": 7933,
+          "sensitive": 187310,
+          "removed_sensitive": 186201,
+          "removed": 194134
+        },
+        "items": {
+          "aws_key": 275,
+          "db_password": 186,
+          "email": 613,
+          "env_secret": 277,
+          "github_token": 183,
+          "ipv4": 383,
+          "jwt": 163,
+          "openai_key": 193,
+          "person_name": 627,
+          "phone": 387,
+          "private_key": 136
+        },
+        "variants": {
+          "adversarial": 29,
+          "base64": 98,
+          "json_escaped": 175,
+          "plain": 3000,
+          "split": 121
+        },
+        "decoys": 2715,
+        "python_steps": 6287
+      },
+      "description": "This repo's scrubber, version 2. Regex + entropy + fixes found on the dev split.",
+      "note": "",
+      "balance": 0.991774612688944
+    },
+    {
+      "name": "v2-without-entropy",
+      "n_traces": 1015,
+      "n_items": 3423,
+      "recall": 0.9795501022494888,
+      "severity_score": 0.9817549426409568,
+      "precision": 0.9999029209992665,
+      "utility_kept": 0.9999985144256696,
+      "decoys_kept": 0.9996316758747698,
+      "python_kept": 1.0,
+      "traces_per_sec": 198.5282713017751,
+      "recall_by_type": {
+        "aws_key": 1.0,
+        "db_password": 0.9946236559139785,
+        "email": 0.9967373572593801,
+        "env_secret": 0.9422382671480144,
+        "github_token": 0.9836065573770492,
+        "ipv4": 0.9973890339425587,
+        "jwt": 0.9938650306748467,
+        "openai_key": 1.0,
+        "person_name": 0.9330143540669856,
+        "phone": 0.9922480620155039,
+        "private_key": 0.9926470588235294
+      },
+      "recall_by_variant": {
+        "adversarial": 0.5172413793103449,
+        "base64": 1.0,
+        "json_escaped": 1.0,
+        "plain": 0.9866666666666667,
+        "split": 0.8677685950413223
+      },
+      "decoys_kept_by_type": {
+        "adversarial": 0.9,
+        "b64_blob": 1.0,
+        "doc_example_key": 1.0,
+        "env_placeholder": 1.0,
+        "example_email": 1.0,
+        "git_sha": 1.0,
+        "safe_ip": 1.0,
+        "sha256": 1.0,
+        "uuid": 1.0
+      },
+      "counts": {
+        "chars": {
+          "total": 12303836,
+          "destroyed": 18,
+          "sensitive": 187310,
+          "removed_sensitive": 185398,
+          "removed": 185416
+        },
+        "items": {
+          "aws_key": 275,
+          "db_password": 186,
+          "email": 613,
+          "env_secret": 277,
+          "github_token": 183,
+          "ipv4": 383,
+          "jwt": 163,
+          "openai_key": 193,
+          "person_name": 627,
+          "phone": 387,
+          "private_key": 136
+        },
+        "variants": {
+          "adversarial": 29,
+          "base64": 98,
+          "json_escaped": 175,
+          "plain": 3000,
+          "split": 121
+        },
+        "decoys": 2715,
+        "python_steps": 6287
+      },
+      "description": "Ablation. Version 2 with its entropy detector switched off, to show what that detector adds & costs.",
+      "note": "",
+      "balance": 0.9907927554461774
+    },
+    {
+      "name": "regex-v1",
+      "n_traces": 1015,
+      "n_items": 3423,
+      "recall": 0.6806894536955886,
+      "severity_score": 0.6696363192579936,
+      "precision": 0.8578604097633826,
+      "utility_kept": 0.9979891100799024,
+      "decoys_kept": 0.5646408839779006,
+      "python_kept": 1.0,
+      "traces_per_sec": 392.87881969148725,
+      "recall_by_type": {
+        "aws_key": 0.6909090909090909,
+        "db_password": 0.8440860215053764,
+        "email": 0.9967373572593801,
+        "env_secret": 0.30324909747292417,
+        "github_token": 0.8360655737704918,
+        "ipv4": 0.9973890339425587,
+        "jwt": 0.8343558282208589,
+        "openai_key": 0.5751295336787565,
+        "person_name": 0.0,
+        "phone": 0.9922480620155039,
+        "private_key": 0.8970588235294118
+      },
+      "recall_by_variant": {
+        "adversarial": 0.1724137931034483,
+        "base64": 0.0,
+        "json_escaped": 0.7942857142857143,
+        "plain": 0.7286666666666667,
+        "split": 0.0
+      },
+      "decoys_kept_by_type": {
+        "adversarial": 0.6,
+        "b64_blob": 1.0,
+        "doc_example_key": 0.2761394101876676,
+        "env_placeholder": 0.0,
+        "example_email": 0.0,
+        "git_sha": 1.0,
+        "safe_ip": 0.0,
+        "sha256": 1.0,
+        "uuid": 1.0
+      },
+      "counts": {
+        "chars": {
+          "total": 12303836,
+          "destroyed": 24365,
+          "sensitive": 187310,
+          "removed_sensitive": 147051,
+          "removed": 171416
+        },
+        "items": {
+          "aws_key": 275,
+          "db_password": 186,
+          "email": 613,
+          "env_secret": 277,
+          "github_token": 183,
+          "ipv4": 383,
+          "jwt": 163,
+          "openai_key": 193,
+          "person_name": 627,
+          "phone": 387,
+          "private_key": 136
+        },
+        "variants": {
+          "adversarial": 29,
+          "base64": 98,
+          "json_escaped": 175,
+          "plain": 3000,
+          "split": 121
+        },
+        "decoys": 2715,
+        "python_steps": 6287
+      },
+      "description": "This repo's scrubber, version 1. One regex per type.",
+      "note": "",
+      "balance": 0.8014866439147552
+    },
+    {
+      "name": "gitleaks",
+      "n_traces": 1015,
+      "n_items": 3423,
+      "recall": 0.21384750219106047,
+      "severity_score": 0.37509153038808885,
+      "precision": 0.9465123005724029,
+      "utility_kept": 0.9994200482877683,
+      "decoys_kept": 1.0,
+      "python_kept": 1.0,
+      "traces_per_sec": 22.253710059808377,
+      "recall_by_type": {
+        "aws_key": 0.7454545454545455,
+        "db_password": 0.0,
+        "email": 0.0,
+        "env_secret": 0.039711191335740074,
+        "github_token": 0.912568306010929,
+        "ipv4": 0.0,
+        "jwt": 0.852760736196319,
+        "openai_key": 0.38341968911917096,
+        "person_name": 0.0,
+        "phone": 0.0,
+        "private_key": 1.0
+      },
+      "recall_by_variant": {
+        "adversarial": 0.20689655172413793,
+        "base64": 0.5918367346938775,
+        "json_escaped": 0.5657142857142857,
+        "plain": 0.18966666666666668,
+        "split": 0.0
+      },
+      "decoys_kept_by_type": {
+        "adversarial": 1.0,
+        "b64_blob": 1.0,
+        "doc_example_key": 1.0,
+        "env_placeholder": 1.0,
+        "example_email": 1.0,
+        "git_sha": 1.0,
+        "safe_ip": 1.0,
+        "sha256": 1.0,
+        "uuid": 1.0
+      },
+      "counts": {
+        "chars": {
+          "total": 12303836,
+          "destroyed": 7027,
+          "sensitive": 187310,
+          "removed_sensitive": 124349,
+          "removed": 131376
+        },
+        "items": {
+          "aws_key": 275,
+          "db_password": 186,
+          "email": 613,
+          "env_secret": 277,
+          "github_token": 183,
+          "ipv4": 383,
+          "jwt": 163,
+          "openai_key": 193,
+          "person_name": 627,
+          "phone": 387,
+          "private_key": 136
+        },
+        "variants": {
+          "adversarial": 29,
+          "base64": 98,
+          "json_escaped": 175,
+          "plain": 3000,
+          "split": 121
+        },
+        "decoys": 2715,
+        "python_steps": 6287
+      },
+      "description": "Third party. Gitleaks 8 secret scanner with its default rules; findings are replaced by a placeholder.",
+      "note": "Gitleaks is a secret scanner. It has no rules for emails, phone numbers, IP addresses or names, so its 0% on those four types is by design, & its overall recall should be read next to its recall on secrets only.",
+      "balance": 0.5454650236907185
+    },
+    {
+      "name": "presidio",
+      "n_traces": 1015,
+      "n_items": 3423,
+      "recall": 0.34501898919076834,
+      "severity_score": 0.18397608005857946,
+      "precision": 0.13285359169698555,
+      "utility_kept": 0.9893188030958708,
+      "decoys_kept": 0.7506445672191528,
+      "python_kept": 0.4102115476379831,
+      "traces_per_sec": 1.6401512846669757,
+      "recall_by_type": {
+        "aws_key": 0.04,
+        "db_password": 0.010752688172043012,
+        "email": 0.0016313213703099511,
+        "env_secret": 0.02888086642599278,
+        "github_token": 0.09289617486338798,
+        "ipv4": 0.9973890339425587,
+        "jwt": 0.06134969325153374,
+        "openai_key": 0.0051813471502590676,
+        "person_name": 0.5757575757575758,
+        "phone": 1.0,
+        "private_key": 0.007352941176470588
+      },
+      "recall_by_variant": {
+        "adversarial": 0.2413793103448276,
+        "base64": 0.04081632653061224,
+        "json_escaped": 0.045714285714285714,
+        "plain": 0.387,
+        "split": 0.008264462809917356
+      },
+      "decoys_kept_by_type": {
+        "adversarial": 0.9,
+        "b64_blob": 0.9776951672862454,
+        "doc_example_key": 1.0,
+        "env_placeholder": 1.0,
+        "example_email": 0.0,
+        "git_sha": 0.9646365422396856,
+        "safe_ip": 0.0,
+        "sha256": 0.9701897018970189,
+        "uuid": 0.9891696750902527
+      },
+      "counts": {
+        "chars": {
+          "total": 12303836,
+          "destroyed": 129419,
+          "sensitive": 187310,
+          "removed_sensitive": 19828,
+          "removed": 149247
+        },
+        "items": {
+          "aws_key": 275,
+          "db_password": 186,
+          "email": 613,
+          "env_secret": 277,
+          "github_token": 183,
+          "ipv4": 383,
+          "jwt": 163,
+          "openai_key": 193,
+          "person_name": 627,
+          "phone": 387,
+          "private_key": 136
+        },
+        "variants": {
+          "adversarial": 29,
+          "base64": 98,
+          "json_escaped": 175,
+          "plain": 3000,
+          "split": 121
+        },
+        "decoys": 2715,
+        "python_steps": 6287
+      },
+      "description": "Third party. Microsoft Presidio for emails, phones, IPs & names, with spaCy's small English model.",
+      "note": "Presidio's 0% on emails is an artifact of this benchmark, not of Presidio. Every synthetic email here ends in a reserved top-level domain (.example or .test) so it can never belong to a real person, & Presidio rejects addresses whose top-level domain is not on the public list. With the endings swapped for .com / .org, Presidio removed 610 of 610 test-split emails (python -m bench.adapters.presidio_tld_check). For the same reason it \"damages\" the example-email decoys such as user@example.com. Its name detection uses the small spaCy model.",
+      "balance": 0.3102561818602329
+    },
+    {
       "name": "do-nothing",
       "n_traces": 1015,
       "n_items": 3423,
@@ -12,7 +397,7 @@
       "utility_kept": 1.0,
       "decoys_kept": 1.0,
       "python_kept": 1.0,
-      "traces_per_sec": 208501.31615399913,
+      "traces_per_sec": 355816.2177654195,
       "recall_by_type": {
         "aws_key": 0.0,
         "db_password": 0.0,
@@ -47,9 +432,10 @@
       "counts": {
         "chars": {
           "total": 12303836,
-          "removed": 0,
-          "sensitive": 194893,
-          "removed_sensitive": 0
+          "destroyed": 0,
+          "sensitive": 187310,
+          "removed_sensitive": 0,
+          "removed": 0
         },
         "items": {
           "aws_key": 275,
@@ -75,6 +461,7 @@
         "python_steps": 6287
       },
       "description": "Baseline. Returns the text unchanged.",
+      "note": "",
       "balance": 0.0
     },
     {
@@ -83,11 +470,11 @@
       "n_items": 3423,
       "recall": 1.0,
       "severity_score": 1.0,
-      "precision": 0.01584001932405471,
+      "precision": 0.015223707468142455,
       "utility_kept": 0.0,
       "decoys_kept": 0.0,
       "python_kept": 0.0,
-      "traces_per_sec": 50575.8192438587,
+      "traces_per_sec": 322063.41762573936,
       "recall_by_type": {
         "aws_key": 1.0,
         "db_password": 1.0,
@@ -122,9 +509,10 @@
       "counts": {
         "chars": {
           "total": 12303836,
-          "removed": 12303836,
-          "sensitive": 194893,
-          "removed_sensitive": 194893
+          "destroyed": 12116526,
+          "sensitive": 187310,
+          "removed_sensitive": 187310,
+          "removed": 12303836
         },
         "items": {
           "aws_key": 275,
@@ -150,6 +538,7 @@
         "python_steps": 6287
       },
       "description": "Baseline. Replaces the whole text with one block character.",
+      "note": "",
       "balance": 0.0
     }
   ]
