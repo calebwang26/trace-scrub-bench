@@ -48,6 +48,7 @@ def recall_heatmap(results: list[dict], path: str | Path) -> None:
 
 
 def _scatter(ax, results: list[dict], xlim: tuple[float, float], title: str) -> None:
+    placed: list[tuple[float, float]] = []
     for r in results:
         x, y = 100 * r["utility_kept"], 100 * r["severity_score"]
         if not xlim[0] <= x <= xlim[1]:
@@ -55,7 +56,11 @@ def _scatter(ax, results: list[dict], xlim: tuple[float, float], title: str) -> 
         baseline = r["name"] in ("do-nothing", "redact-everything")
         ax.scatter([x], [y], s=70, color=GRAY if baseline else BLUE, edgecolor=SURFACE, linewidth=2, zorder=3, clip_on=False)
         right_side = x - xlim[0] < 0.25 * (xlim[1] - xlim[0])
-        ax.annotate(r["name"], (x, y), xytext=(8 if right_side else -8, 7), textcoords="offset points", ha="left" if right_side else "right", fontsize=8.5, color=INK)
+        # if another point sits close by, put this label below its dot instead of above
+        crowded = any(abs(x - px) < 0.2 * (xlim[1] - xlim[0]) and abs(y - py) < 6 for px, py in placed)
+        placed.append((x, y))
+        ax.annotate(r["name"], (x, y), xytext=(8 if right_side else -8, -9 if crowded else 7), textcoords="offset points",
+                    ha="left" if right_side else "right", va="top" if crowded else "bottom", fontsize=8.5, color=INK)
     ax.set_xlim(*xlim)
     ax.set_ylim(-4, 104)
     ax.grid(color=GRID, linewidth=0.8)

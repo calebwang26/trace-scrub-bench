@@ -89,7 +89,7 @@ def _ratio(a: float, b: float) -> float | None:
     return a / b if b else None
 
 
-def score(data: Dataset, scrub_many: Callable[[list[str]], list[str]], name: str = "scrubber", keep_misses: bool = False) -> dict:
+def score(data: Dataset, scrub_many: Callable[[list[str]], list[str]], name: str = "scrubber", keep_misses: bool = False, by_trace: bool = False) -> dict:
     """Run a scrubber over every step of every trace & return its scores.
 
     `scrub_many` takes the list of step texts of one trace & returns the
@@ -105,6 +105,7 @@ def score(data: Dataset, scrub_many: Callable[[list[str]], list[str]], name: str
     misses: list[dict] = []
     false_positives: list[dict] = []
     collateral: Counter = Counter()  # harmless snippets that were destroyed
+    per_trace: dict[str, Counter] = defaultdict(Counter)  # only filled when by_trace is set
 
     for trace in data.traces:
         texts = [s["content"] for s in trace["steps"]]
@@ -132,6 +133,8 @@ def score(data: Dataset, scrub_many: Callable[[list[str]], list[str]], name: str
                 items[item["type"]] += 1
                 variants[item["variant"]] += 1
                 weight_total += weight
+                per_trace[trace["trace_id"]]["items"] += 1
+                per_trace[trace["trace_id"]]["removed"] += gone
                 if gone:
                     removed_items[item["type"]] += 1
                     removed_variants[item["variant"]] += 1
@@ -160,6 +163,8 @@ def score(data: Dataset, scrub_many: Callable[[list[str]], list[str]], name: str
                 decoys[decoy["type"]] += 1
                 intact = all(keep[a:b].count(GONE) == 0 for a, b in decoy["spans"])
                 decoys_kept[decoy["type"]] += intact
+                per_trace[trace["trace_id"]]["decoys"] += 1
+                per_trace[trace["trace_id"]]["decoys_kept"] += intact
                 if keep_misses and not intact:
                     false_positives.append({**decoy, "scrubbed": scrubbed})
 
@@ -187,6 +192,8 @@ def score(data: Dataset, scrub_many: Callable[[list[str]], list[str]], name: str
         "decoys_kept_by_type": {t: decoys_kept[t] / n for t, n in sorted(decoys.items())},
         "counts": {"chars": dict(chars), "items": dict(sorted(items.items())), "variants": dict(sorted(variants.items())), "decoys": sum(decoys.values()), "python_steps": python_total},
     }
+    if by_trace:
+        result["by_trace"] = {trace_id: dict(c) for trace_id, c in per_trace.items()}
     if keep_misses:
         result["misses"], result["false_positives"], result["collateral"] = misses, false_positives, collateral
     return result
