@@ -3,7 +3,7 @@ import pytest
 
 from bench.align import SOLID, WEAK, surviving
 from bench.baselines import do_nothing, redact_everything
-from bench.score import SEVERITY, Dataset, allowed_survivors, load_dataset, per_text, score
+from bench.score import SEVERITY, Dataset, allowed_survivors, bootstrap_ci, load_dataset, per_text, score
 from tracegen.generate import generate
 
 KEY = "AKIAFAKE7Q2MXP4RTZ1L"  # 20 characters
@@ -150,6 +150,33 @@ def test_a_damaged_decoy_and_broken_python_are_counted():
     assert r["python_kept"] == 1  # `SHA = [REDACTED]` is still valid Python (a list)
     outputs[step2] = 'SHA = "[REDACTED]\nprint(SHA)\n'  # unbalanced quote
     assert score(data, per_text(outputs.__getitem__))["python_kept"] == 0
+
+
+# --- confidence intervals ---------------------------------------------------------
+
+def test_bootstrap_interval_collapses_when_every_trace_agrees():
+    assert bootstrap_ci([(2, 2)] * 50) == [1.0, 1.0]
+    assert bootstrap_ci([(0, 3)] * 50) == [0.0, 0.0]
+    assert bootstrap_ci([]) is None and bootstrap_ci([(0, 0)]) is None  # nothing to estimate from
+
+
+def test_bootstrap_interval_brackets_the_score_and_is_repeatable():
+    pairs = [(1, 1)] * 80 + [(0, 1)] * 20  # true score 0.80
+    low, high = bootstrap_ci(pairs)
+    assert low < 0.80 < high and 0.70 < low and high < 0.89  # roughly 0.80 +/- 2 * sqrt(0.8 * 0.2 / 100)
+    assert bootstrap_ci(pairs) == [low, high]  # fixed seed: same interval every time
+
+
+def test_fewer_traces_give_a_wider_interval():
+    few, many = bootstrap_ci([(1, 1)] * 8 + [(0, 1)] * 2), bootstrap_ci([(1, 1)] * 800 + [(0, 1)] * 200)
+    assert few[1] - few[0] > 5 * (many[1] - many[0])
+
+
+def test_score_reports_intervals(generated):
+    r = score(generated, per_text(lambda t: t.replace("@", "[at]")))  # catches emails only
+    assert r["recall_ci"][0] <= r["recall"] <= r["recall_ci"][1]
+    assert r["severity_ci"][0] <= r["severity_score"] <= r["severity_ci"][1]
+    assert r["adversarial_ci"] is None  # this small generated set has no adversarial traces
 
 
 # --- alignment ------------------------------------------------------------------
