@@ -9,3 +9,7 @@ scrubbers:
   - name: redact-everything
     entry: bench.baselines:redact_everything
     description: Baseline. Replaces the whole text with one block character.
+
+  - name: regex-v1
+    entry: scrubber.scrub:scrub_v1
+    description: This repo's scrubber, version 1. One regex per type.
