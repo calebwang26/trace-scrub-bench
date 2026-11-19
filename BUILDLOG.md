@@ -34,3 +34,11 @@ What was built in each step, the decisions made & why, & the problems hit along 
 - **Real output (seed 20261118, 2,000 traces):** 134,600 steps (mean 67 per trace, 27 tool calls), 6,637 planted sensitive items (5,826 plain, 343 escaped JSON, 247 base64, 221 split), 5,628 decoys, 12,263 whole-file Python steps that all parse.
 - Tests: same seed → identical bytes, different seed → different data, positions exact, every Python step parses, & a sweep proves nothing sensitive-looking sits outside the labeled spans.
 - **Problem:** on the first pull request the gitleaks CI job failed with `403 Resource not accessible by integration`. It was not a leak: the gitleaks action lists the PR's commits through the GitHub API, & the workflow only granted `contents: read`. **Fix:** added `pull-requests: read` to the workflow permissions.
+
+## Step 3: dataset statistics & the stratified sampler (`scrubber/stats.py`, `scrubber/sample.py`)
+
+- `stats.py` reports trace count, steps / tool calls / messages per trace (mean, median, p90), success rate, share with a repo & breakdowns by model & harness.
+- `sample.py` stratifies by model × outcome × has_repo (24 strata in the 2,000-trace set). **Decision:** largest-remainder allocation. Each stratum's exact share is rarely a whole number; rounding each one separately can make the total miss N. Largest remainder always sums to exactly N & keeps every stratum within one trace of its exact share. A test checks both properties on 200 random cases.
+- **Decision:** harness is reported on the sample card but is not a stratum. Adding it would create 120 strata, many with only a handful of traces. The card says so.
+- **Real output (200 of 2,000, seed 0):** success rate 52.0% in the sample vs 52.1% in the full set, repo share 75.5% vs 75.9%, largest stratum gap 0.25 percentage points.
+- A test also checks that the stratified sample's worst-stratum gap is smaller than the average gap of 30 simple random samples, which is the reason to stratify at all.
