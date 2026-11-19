@@ -42,3 +42,18 @@ What was built in each step, the decisions made & why, & the problems hit along 
 - **Decision:** harness is reported on the sample card but is not a stratum. Adding it would create 120 strata, many with only a handful of traces. The card says so.
 - **Real output (200 of 2,000, seed 0):** success rate 52.0% in the sample vs 52.1% in the full set, repo share 75.5% vs 75.9%, largest stratum gap 0.25 percentage points.
 - A test also checks that the stratified sample's worst-stratum gap is smaller than the average gap of 30 simple random samples, which is the reason to stratify at all.
+
+## Step 4: the scorer (`bench/align.py`, `bench/score.py`, `bench/baselines.py`)
+
+Built & tested **before** any real scrubber exists, so the measuring tool can't be shaped around the thing it measures.
+
+- `align.py`: a scrubber only returns a new string, so the benchmark has to work out which original characters survived. Two passes: line by line first, then character by character inside changed lines.
+- **Decision:** in the character pass a matching run counts only if it is at least 4 characters long. **Why:** the placeholder `[REDACTED_AWS_KEY]` shares the letters `K` & `E` with almost any key, & a plain diff would report "2 characters of the key leaked".
+- **Decision (the partial-redaction rule):** an item counts as removed only if at most `min(4, length // 4)` of its characters survive. That allows a kept public prefix (`ghp_`, `AKIA`) & nothing more. A test pins it: keeping `AKIA` passes, keeping `AKIAF` or the second half of the key is a miss.
+- **Decision:** `redact_everything` returns a single block character `█`, which never occurs in a trace, so its utility is exactly 0 rather than "nearly 0 because a few letters happened to match".
+- Severity weights: private key & AWS key 10; GitHub token, OpenAI-style key, JWT, database password, env secret 7; email, phone, name 3; IPv4 1.
+- **Problem:** a test with a secret split over two lines showed utility below 100% although only the secret was removed. **Cause:** when two neighbouring lines both change, the diff treats them as one region, & the 2 characters between the halves (backslash + newline) formed a run shorter than 4, so they were counted as destroyed. **Fix:** when a changed region has the same number of lines before & after, pair the lines up one to one.
+- **Problem:** two tests failed comparing a float with a `Fraction` (`0.3333333333333333 != Fraction(1, 3)`). The scorer was right, the test was wrong. **Fix:** compare with the same division written out (`1 / 3`).
+- Tests (16): both baselines give exactly 0 / 1 on a hand-made dataset **and** on 60 generated traces; a hand-made example with a hand-computed answer (recall 1/3, severity 3/14, precision 31/35, utility 44/48) matches exactly.
+- **Real timing:** scoring `redact_everything` over 2,000 traces (134,600 steps) takes about 3 seconds, so the alignment is not a bottleneck.
+- **First surprise from real data:** a one-line email regex also "removed" database passwords & GitHub tokens, because `user:PASSWORD@host.example` & `token@github.com` look like emails. It scored 22.7% overall recall although emails are only 17% of the items.
