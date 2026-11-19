@@ -49,6 +49,10 @@ def report(name: str, examples: int = 2) -> str:
             a, b = row["spans"][0]
             lines.append(f"      decoy:  {_clip(row['text'])}")
             lines.append(f"      after:  {_clip(row['scrubbed'][max(0, a - 30) : b + 30])}")
+    lines += ["", "COLLATERAL: harmless text destroyed, by total characters lost (snippet x times)"]
+    worst = sorted(result["collateral"].items(), key=lambda kv: -len(kv[0]) * kv[1])
+    for snippet, times in worst[: 6 * max(examples, 1)]:
+        lines.append(f"  {len(snippet) * times:>7} chars   x{times:<5} {_clip(snippet, 90)}")
     return "\n".join(lines)
 
 
