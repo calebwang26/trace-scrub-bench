@@ -7,7 +7,7 @@ import math
 import pytest
 
 from scrubber.entropy import THRESHOLD, high_entropy_spans, shannon_entropy
-from scrubber.scrub import is_placeholder, joined_view, looks_secret, scrub_v1, scrub_v2
+from scrubber.scrub import is_placeholder, joined_view, looks_secret, scrub_v1, scrub_v2, scrub_v2_no_entropy
 
 AWS = "AKIAFAKE7Q2MXP4RTZ1L"
 GH = "ghp_FAKEn4Jq8Zr2Lw6Tb0Xc5Vd9Ys3Ku7Pm1Ha4"
@@ -40,6 +40,13 @@ def test_a_false_positive_the_entropy_detector_really_produces():
     """Public base64 (here a test image) is as random as a secret. This is the known cost."""
     blob = base64.b64encode(bytes(range(7, 250, 5))).decode()
     assert scrub_v2(f'PNG_1X1 = "{blob}"') == 'PNG_1X1 = "[REDACTED_HIGH_ENTROPY]"'
+
+
+def test_the_ablation_switches_only_the_entropy_detector_off():
+    blob = base64.b64encode(bytes(range(7, 250, 5))).decode()
+    assert scrub_v2_no_entropy(f'PNG_1X1 = "{blob}"') == f'PNG_1X1 = "{blob}"'  # the false positive is gone
+    assert scrub_v2_no_entropy(f"key {AWS}") == "key [REDACTED_AWS_KEY]"  # the other rules still work
+    assert scrub_v2(f'PNG_1X1 = "{blob}"') != f'PNG_1X1 = "{blob}"'  # & v2 itself is unchanged afterwards
 
 
 # --- what v1 missed --------------------------------------------------------------
