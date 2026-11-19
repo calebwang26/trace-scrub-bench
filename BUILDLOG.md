@@ -146,3 +146,13 @@ Every scrubber was frozen before this run. Nothing in `scrubber/` was changed af
 - `README.md` follows the required structure (question, why it matters, method, results, limitations, next steps, how to run). Every number in it is copied from `bench/LEADERBOARD.md`, `bench/results_test.json` or a command named next to it.
 - `EXPLAIN.md` has the file-by-file walkthrough & a written answer to each "defend it" question.
 - **Problem:** while writing an example for `EXPLAIN.md` I typed a share from memory (6.3%) & then checked it against the data: the real figure is 10.0%. Fixed before commit. Numbers in the docs are checked against output, not recalled.
+
+### Pre-publish checklist (run on `main` after the last merge)
+
+1. **Secret scan of the entire history: pass.** `gitleaks detect --source . --log-opts="--all"` reports no leaks. Run again with the default rules & *without* the `FAKE` allowlist, it reports 5 findings, all in test files & all containing `FAKE` (4 GitHub-token-shaped test values, 1 JWT-shaped one). Nothing without the marker.
+2. **Commit emails: FAIL, not yet fixed.** The 36 commits made on this machine use the GitHub no-reply address. But the 9 merge commits were created by GitHub when each pull request was merged, & GitHub wrote the account's primary email (a personal Gmail address) as their author. Fixing it means rewriting those 9 commits & force-pushing `main`, a destructive git operation that needs Caleb's explicit OK, plus switching on "Keep my email addresses private" in GitHub's settings so future merges use the no-reply address. **The repo stays private until this is decided.**
+3. **Confidential terms: pass.** No company, seller, buyer or partner names, prices or deal terms in any tracked file. The README describes the context generically.
+4. **Size: pass.** The largest tracked file is a 127 KB plot. No generated data, `.env` or `*.jsonl` file is tracked.
+5. **CI & fresh clone: pass.** CI is green on `main`. A fresh `gh repo clone` into a temp folder, a new virtual environment with only `requirements.txt`, then `make all`: exit code 0 in 85 seconds, 115 tests passed (1 skipped: Presidio not installed), checksums verified, & every non-Presidio leaderboard number identical to the committed one.
+6. **README review: waiting for Caleb.**
+7. **Switch to public: not done.** Waiting for Caleb's approval.
