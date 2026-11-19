@@ -59,3 +59,7 @@ One change from the spec: the generator sits in its own `tracegen/` folder, not 
 - Every synthetic secret contains `FAKE` where its format allows, & is assembled at runtime from parts.
 - v2 is tuned on dev only. Test-split numbers are computed once the scrubber is frozen.
 - Results in the README come from real runs. Negative results are reported as they are.
+
+## How it went
+
+The plan held. Two things were added along the way: a `v2-without-entropy` ablation entry, & a case-by-case table for the adversarial traces. `BUILDLOG.md` has the full record, including a bug in the benchmark that the first scrubber exposed.
