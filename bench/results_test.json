@@ -1,0 +1,156 @@
+{
+  "split": "test",
+  "skipped": [],
+  "results": [
+    {
+      "name": "do-nothing",
+      "n_traces": 1015,
+      "n_items": 3423,
+      "recall": 0.0,
+      "severity_score": 0.0,
+      "precision": null,
+      "utility_kept": 1.0,
+      "decoys_kept": 1.0,
+      "python_kept": 1.0,
+      "traces_per_sec": 208501.31615399913,
+      "recall_by_type": {
+        "aws_key": 0.0,
+        "db_password": 0.0,
+        "email": 0.0,
+        "env_secret": 0.0,
+        "github_token": 0.0,
+        "ipv4": 0.0,
+        "jwt": 0.0,
+        "openai_key": 0.0,
+        "person_name": 0.0,
+        "phone": 0.0,
+        "private_key": 0.0
+      },
+      "recall_by_variant": {
+        "adversarial": 0.0,
+        "base64": 0.0,
+        "json_escaped": 0.0,
+        "plain": 0.0,
+        "split": 0.0
+      },
+      "decoys_kept_by_type": {
+        "adversarial": 1.0,
+        "b64_blob": 1.0,
+        "doc_example_key": 1.0,
+        "env_placeholder": 1.0,
+        "example_email": 1.0,
+        "git_sha": 1.0,
+        "safe_ip": 1.0,
+        "sha256": 1.0,
+        "uuid": 1.0
+      },
+      "counts": {
+        "chars": {
+          "total": 12303836,
+          "removed": 0,
+          "sensitive": 194893,
+          "removed_sensitive": 0
+        },
+        "items": {
+          "aws_key": 275,
+          "db_password": 186,
+          "email": 613,
+          "env_secret": 277,
+          "github_token": 183,
+          "ipv4": 383,
+          "jwt": 163,
+          "openai_key": 193,
+          "person_name": 627,
+          "phone": 387,
+          "private_key": 136
+        },
+        "variants": {
+          "adversarial": 29,
+          "base64": 98,
+          "json_escaped": 175,
+          "plain": 3000,
+          "split": 121
+        },
+        "decoys": 2715,
+        "python_steps": 6287
+      },
+      "description": "Baseline. Returns the text unchanged.",
+      "balance": 0.0
+    },
+    {
+      "name": "redact-everything",
+      "n_traces": 1015,
+      "n_items": 3423,
+      "recall": 1.0,
+      "severity_score": 1.0,
+      "precision": 0.01584001932405471,
+      "utility_kept": 0.0,
+      "decoys_kept": 0.0,
+      "python_kept": 0.0,
+      "traces_per_sec": 50575.8192438587,
+      "recall_by_type": {
+        "aws_key": 1.0,
+        "db_password": 1.0,
+        "email": 1.0,
+        "env_secret": 1.0,
+        "github_token": 1.0,
+        "ipv4": 1.0,
+        "jwt": 1.0,
+        "openai_key": 1.0,
+        "person_name": 1.0,
+        "phone": 1.0,
+        "private_key": 1.0
+      },
+      "recall_by_variant": {
+        "adversarial": 1.0,
+        "base64": 1.0,
+        "json_escaped": 1.0,
+        "plain": 1.0,
+        "split": 1.0
+      },
+      "decoys_kept_by_type": {
+        "adversarial": 0.0,
+        "b64_blob": 0.0,
+        "doc_example_key": 0.0,
+        "env_placeholder": 0.0,
+        "example_email": 0.0,
+        "git_sha": 0.0,
+        "safe_ip": 0.0,
+        "sha256": 0.0,
+        "uuid": 0.0
+      },
+      "counts": {
+        "chars": {
+          "total": 12303836,
+          "removed": 12303836,
+          "sensitive": 194893,
+          "removed_sensitive": 194893
+        },
+        "items": {
+          "aws_key": 275,
+          "db_password": 186,
+          "email": 613,
+          "env_secret": 277,
+          "github_token": 183,
+          "ipv4": 383,
+          "jwt": 163,
+          "openai_key": 193,
+          "person_name": 627,
+          "phone": 387,
+          "private_key": 136
+        },
+        "variants": {
+          "adversarial": 29,
+          "base64": 98,
+          "json_escaped": 175,
+          "plain": 3000,
+          "split": 121
+        },
+        "decoys": 2715,
+        "python_steps": 6287
+      },
+      "description": "Baseline. Replaces the whole text with one block character.",
+      "balance": 0.0
+    }
+  ]
+}
