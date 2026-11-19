@@ -17,3 +17,26 @@ scrubbers:
   - name: regex+entropy-v2
     entry: scrubber.scrub:scrub_v2
     description: This repo's scrubber, version 2. Regex + entropy + fixes found on the dev split.
+
+  - name: v2-without-entropy
+    entry: scrubber.scrub:scrub_v2_no_entropy
+    description: Ablation. Version 2 with its entropy detector switched off, to show what that detector adds & costs.
+
+  - name: gitleaks
+    entry: bench.adapters.gitleaks_adapter:scrubber
+    optional: true
+    description: Third party. Gitleaks 8 secret scanner with its default rules; findings are replaced by a placeholder.
+    note: >-
+      Gitleaks is a secret scanner. It has no rules for emails, phone numbers, IP addresses or names, so its 0% on
+      those four types is by design, & its overall recall should be read next to its recall on secrets only.
+
+  - name: presidio
+    entry: bench.adapters.presidio_adapter:scrubber
+    optional: true
+    description: Third party. Microsoft Presidio for emails, phones, IPs & names, with spaCy's small English model.
+    note: >-
+      Presidio's 0% on emails is an artifact of this benchmark, not of Presidio. Every synthetic email here ends in a
+      reserved top-level domain (.example or .test) so it can never belong to a real person, & Presidio rejects
+      addresses whose top-level domain is not on the public list. With the endings swapped for .com / .org, Presidio
+      removed 610 of 610 test-split emails (python -m bench.adapters.presidio_tld_check). For the same reason it
+      "damages" the example-email decoys such as user@example.com. Its name detection uses the small spaCy model.

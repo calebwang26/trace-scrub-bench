@@ -26,7 +26,7 @@ def balance(result: dict) -> float:
     return 2 * a * b / (a + b) if a + b else 0.0
 
 
-def run(split: str, only: list[str] | None = None, limit: int | None = None, registry: str | Path = plugins.REGISTRY) -> tuple[list[dict], list[str]]:
+def run(split: str, only: list[str] | None = None, limit: int | None = None, registry: str | Path = plugins.REGISTRY, skip_optional: bool = False) -> tuple[list[dict], list[str]]:
     """Score the registered scrubbers on a split. Returns (results, skipped notes)."""
     build_splits.ensure()
     data = load_dataset(*build_splits.folders(split))
@@ -36,6 +36,9 @@ def run(split: str, only: list[str] | None = None, limit: int | None = None, reg
     for entry in plugins.load_registry(registry):
         if only and entry["name"] not in only:
             continue
+        if skip_optional and entry.get("optional"):
+            skipped.append(f"{entry['name']}: skipped on request (--skip-optional)")
+            continue
         try:
             scrub_many = plugins.load(entry)
         except plugins.Unavailable as reason:
@@ -43,11 +46,32 @@ def run(split: str, only: list[str] | None = None, limit: int | None = None, reg
             continue
         result = score(data, scrub_many, entry["name"])
         result["description"] = entry.get("description", "")
+        result["note"] = " ".join(entry.get("note", "").split())
         result["balance"] = balance(result)
         results.append(result)
         print(f"scored {entry['name']}")
     results.sort(key=lambda r: (-r["balance"], r["name"]))
     return results, skipped
+
+
+def adversarial_cases(names: list[str], registry: str | Path = plugins.REGISTRY) -> dict[str, dict]:
+    """Score the hand-written traces alone, case by case: {scrubber: {trace_id: counts}}."""
+    data = load_dataset(build_splits.DATA_ROOT / "adversarial")
+    entries = {e["name"]: e for e in plugins.load_registry(registry)}
+    return {name: score(data, plugins.load(entries[name]), name, by_trace=True)["by_trace"] for name in names}
+
+
+def adversarial_table(cases: dict[str, dict]) -> list[str]:
+    names = list(cases)
+    trace_ids = sorted(next(iter(cases.values())))
+    rows = []
+    for trace_id in trace_ids:
+        cells = []
+        for name in names:
+            c = cases[name][trace_id]
+            cells.append(f"{c.get('removed', 0)} of {c['items']}" if c.get("items") else f"{c.get('decoys_kept', 0)} of {c['decoys']} kept")
+        rows.append([trace_id.split("-", 2)[2].replace("-", " ")] + cells)
+    return _table(["hand-written case"] + names, rows)
 
 
 def pct(x: float | None, digits: int = 1) -> str:
@@ -79,7 +103,7 @@ def breakdown_table(results: list[dict], key: str) -> list[str]:
     return _table(["scrubber"] + [c.replace("_", " ") for c in columns], [[r["name"]] + [pct(r[key].get(c), 0) for c in columns] for r in results])
 
 
-def leaderboard(results: list[dict], skipped: list[str], split: str) -> str:
+def leaderboard(results: list[dict], skipped: list[str], split: str, cases: dict[str, dict] | None = None) -> str:
     first = results[0]
     counts = first["counts"]
     lines = [
@@ -117,10 +141,20 @@ def leaderboard(results: list[dict], skipped: list[str], split: str) -> str:
         "",
         *breakdown_table(results, "decoys_kept_by_type"),
         "",
+        *(
+            ["## The hand-written adversarial traces, case by case", "",
+             "Items removed out of items planted. The last row holds only harmless look-alikes, so it shows how many were left intact.", "",
+             *adversarial_table(cases), ""]
+            if cases else []
+        ),
         "![Recall by type & variant](plots/recall_heatmap.png)",
         "",
         "![Risk removed vs utility kept](plots/recall_vs_utility.png)",
     ]
+    notes = [f"- **{r['name']}:** {r['note']}" for r in results if r.get("note")]
+    if notes:
+        lines += ["", "## Notes on individual entries", ""] + notes
+    lines += ["", "## Entries", ""] + [f"- **{r['name']}:** {r['description']}" for r in results]
     if skipped:
         lines += ["", "## Skipped entries", ""] + [f"- {note}" for note in skipped]
     return "\n".join(lines) + "\n"
@@ -131,22 +165,32 @@ def main() -> None:
     parser.add_argument("--split", choices=["test", "dev"], default="test")
     parser.add_argument("--only", nargs="*", help="score only these entries")
     parser.add_argument("--limit", type=int, help="score only the first N traces (quick checks)")
+    parser.add_argument("--skip-optional", action="store_true", help="leave out the optional third-party entries")
+    parser.add_argument("--merge", action="store_true", help="with --only: keep the other entries' saved results & rewrite the leaderboard")
     args = parser.parse_args()
-    results, skipped = run(args.split, args.only, args.limit)
+    results, skipped = run(args.split, args.only, args.limit, skip_optional=args.skip_optional)
     print()
     print("\n".join(main_table(results)))
     for note in skipped:
         print("skipped:", note)
-    partial = bool(args.only or args.limit)
-    if partial:
+    results_path = HERE / f"results_{args.split}.json"
+    if args.merge and args.only and not args.limit and results_path.exists():
+        saved = json.loads(results_path.read_text(encoding="utf-8"))
+        order = [e["name"] for e in plugins.load_registry()]
+        fresh = {r["name"] for r in results}
+        results += [r for r in saved["results"] if r["name"] not in fresh and r["name"] in order]
+        results.sort(key=lambda r: (-r["balance"], r["name"]))
+        skipped = saved["skipped"]
+    elif args.only or args.limit:
         print("\n(partial run: nothing written)")
         return
-    (HERE / f"results_{args.split}.json").write_text(json.dumps({"split": args.split, "skipped": skipped, "results": results}, indent=2) + "\n", encoding="utf-8")
+    results_path.write_text(json.dumps({"split": args.split, "skipped": skipped, "results": results}, indent=2) + "\n", encoding="utf-8")
     if args.split == "test":
         (HERE / "plots").mkdir(exist_ok=True)
         charts.recall_heatmap(results, HERE / "plots" / "recall_heatmap.png")
         charts.recall_vs_utility(results, HERE / "plots" / "recall_vs_utility.png")
-        (HERE / "LEADERBOARD.md").write_text(leaderboard(results, skipped, args.split), encoding="utf-8")
+        cases = adversarial_cases([r["name"] for r in results if r["name"] not in BASELINES])
+        (HERE / "LEADERBOARD.md").write_text(leaderboard(results, skipped, args.split, cases), encoding="utf-8")
         print("\nwrote bench/LEADERBOARD.md, bench/results_test.json & bench/plots/")
 
 

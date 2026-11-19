@@ -211,7 +211,12 @@ def base64_secrets(text: str) -> Iterable[Span]:
 BASE64_PIPE = rule("BASE64_SECRET", r"\becho +[\"']?([A-Za-z0-9+/]{12,}={0,2})[\"']? *\| *base64 +(?:-d|-D|--decode)\b", group=1)
 
 
+_ENTROPY_ON = True  # switched off only by scrub_v2_no_entropy, the ablation
+
+
 def entropy_detector(text: str) -> Iterable[Span]:
+    if not _ENTROPY_ON:
+        return
     for start, end in high_entropy_spans(text):
         if not is_placeholder(text[start:end]):
             yield (start, end, "HIGH_ENTROPY")
@@ -358,6 +363,16 @@ def scrub_v2(text: str, depth: int = 0) -> str:
         else:
             return _scrub_json(text, depth)
     return redact(text, find_spans(text, DETECTORS_V2))
+
+
+def scrub_v2_no_entropy(text: str) -> str:
+    """Ablation: v2 with the entropy detector switched off, to measure what it adds & costs."""
+    global _ENTROPY_ON
+    _ENTROPY_ON = False
+    try:
+        return scrub_v2(text)
+    finally:
+        _ENTROPY_ON = True
 
 
 VERSIONS = {"v1": scrub_v1, "v2": scrub_v2}
