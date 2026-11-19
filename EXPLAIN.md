@@ -41,7 +41,7 @@ If you remember one comparison from ML: this is a classifier evaluation. "Sensit
 ### `scrubber/`: Part A
 
 - **`stats.py`**: dataset statistics: how many traces, how long, success rate, share with a repo, mix by model & harness.
-- **`sample.py`**: the stratified sampler. It picks N traces so that the mix of (model, outcome, has_repo) matches the full set, & writes a sample card: the one-page summary a buyer reads.
+- **`sample.py`**: the stratified sampler. It picks N traces so that the mix of (model, outcome, has_repo) matches the full set, & writes a sample card: the one-page summary a buyer reads. The card also states the scrubber's measured miss rate, read from the benchmark's results file, so it never claims the data is clean.
 - **`entropy.py`**: Shannon entropy, a number for "how random does this string look" in bits per character. `aaaaaaaa` scores 0. English identifiers score 3 to 4. Random base64 scores above 4.3. The detector flags long tokens above a threshold.
 - **`scrub.py`**: the scrubber. Each *detector* looks at the text & proposes spans to remove. Overlaps are settled by priority. Each surviving span is replaced by a typed placeholder such as `[REDACTED_AWS_KEY]`.
   - **v1** is ten regexes, one per type.
@@ -54,7 +54,7 @@ If you remember one comparison from ML: this is a classifier evaluation. "Sensit
 - **`build_splits.py`**: regenerates the dev & test data from the seeds & checks the fingerprints. The data itself is never committed.
 - **`adversarial.py`**: 15 hand-written traces in formats the generator never produces. They are scored with the test split, to check that a scrubber didn't just learn the generator's templates.
 - **`align.py`**: a scrubber only returns new text. To score it, the benchmark lines up the text before & after (first line by line, then character by character) & marks each original character as SOLID (clearly still there), WEAK (a short match that may be a coincidence) or GONE.
-- **`score.py`**: turns those marks into numbers: recall, the severity-weighted score, precision, utility kept, decoys kept, Python-still-parses & speed.
+- **`score.py`**: turns those marks into numbers: recall, the severity-weighted score, precision, utility kept, decoys kept, Python-still-parses & speed. It also puts a 95% confidence interval on the main scores with a *bootstrap*: pretend the test split had been a different random draw by redrawing its traces (with replacement) 2,000 times, rescore each time, & report the range holding the middle 95% of those scores. Few traces give a wide range; many give a narrow one.
 - **`baselines.py`**: the two anchors: do-nothing & redact-everything.
 - **`plugins.py`** & **`scrubbers.yaml`**: the plug-in interface. A scrubber is a Python function `scrub(text) -> str` or a command that reads stdin & writes stdout. Entries are listed in the YAML file & loaded by name.
 - **`adapters/`**: wrappers that make two third-party tools fit that interface: Gitleaks (a secret scanner) & Microsoft Presidio (a personal-data detector).
@@ -110,7 +110,7 @@ Entropy measures how random a string looks. Secrets are random on purpose, so hi
 
 **A real false positive:** a test fixture line `PNG_1X1 = "<base64 of a tiny image>"`. v2 turns it into `PNG_1X1 = "[REDACTED_HIGH_ENTROPY]"`. On the test split v2 damages half of all public base64 blobs this way (50% of the `b64 blob` decoys kept). A test in `tests/test_scrub_v2.py` pins this behaviour.
 
-**The honest surprise:** in this project the entropy detector raised recall very little. With it switched off (`v2-without-entropy`), test recall goes from 98.1% to 98.0%, & on dev it loses 9 items out of 6,637. Meanwhile precision goes from 95.9% to 100.0%. The rules that find a secret through its variable name (`SMTP_PASSWORD = ...`) or by decoding base64 & looking inside already catch what entropy catches. Entropy only clearly helped on unfamiliar formats: 17 of 29 adversarial items with it, 15 without.
+**The honest surprise:** in this project the entropy detector raised recall very little. With it switched off (`v2-without-entropy`), test recall goes from 98.1% to 98.0%, & on dev it loses 9 items out of 6,637. Meanwhile precision goes from 95.9% to 100.0%. The rules that find a secret through its variable name (`SMTP_PASSWORD = ...`) or by decoding base64 & looking inside already catch what entropy catches. The one place it helped is unfamiliar formats: 17 of 29 adversarial items with it, 15 without. That is a difference of two items, & the two confidence intervals (37.9% to 78.6% & 31.0% to 70.4%) overlap almost completely, so it can't be called a real effect. The cost is measured; the benefit is not.
 
 Two details of how the detector is built: hex strings are skipped, because 16 symbols can never exceed 4.0 bits per character & commit hashes aren't secrets; & the threshold of 4.3 bits was chosen on dev data, where it flagged 4 of 96,528 ordinary strings, against 6,505 at a threshold of 3.8.
 
@@ -132,7 +132,7 @@ One lesson from the results: the plain character count is a weak utility metric.
 
 Same reason as a test set in machine learning. v2 was built by looking at what v1 missed on the dev split & fixing it, one group at a time. After enough rounds, a scrubber fits the dev data, including its accidents. Scoring it on dev would then overstate how good it is. The test split has a different seed, so it has different secrets & different traces. v2 scores 98.6% on dev & 98.5% on the generated part of test, so the fixes carried over to new data from the same generator.
 
-But the same generator is the weak point. Both splits come from the same few dozen templates. A scrubber can learn the templates instead of the problem. The 15 hand-written traces use formats the generator never produces, & there the picture changes: **v2 removes 17 of 29 items, 58.6%.** Without those traces, this README would report 98% & nobody would know the scrubber misses a token printed as hex or a phone number in a UK format.
+But the same generator is the weak point. Both splits come from the same few dozen templates. A scrubber can learn the templates instead of the problem. The 15 hand-written traces use formats the generator never produces, & there the picture changes: **v2 removes 17 of 29 items, 58.6%.** Without those traces, this README would report 98% & nobody would know the scrubber misses a token printed as hex or a phone number in a UK format. With only 29 items that 58.6% is itself rough: its 95% confidence interval runs from 37.9% to 78.6%. It is enough to say "far worse than 98%", not enough to say "59%" with a straight face.
 
 Two rules keep the test honest: the adversarial traces were written before any scrubber existed, & the error-analysis tool (`bench/misses.py`) refuses to run on anything but dev. The moment you read individual test misses & fix them, the test split becomes a second dev split.
 

@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import ast
 import json
+import random
 import time
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
@@ -89,6 +90,30 @@ def _ratio(a: float, b: float) -> float | None:
     return a / b if b else None
 
 
+def bootstrap_ci(pairs: list[tuple[float, float]], resamples: int = 2000, seed: int = 0) -> list[float] | None:
+    """95% confidence interval for sum(numerators) / sum(denominators).
+
+    `pairs` holds one (numerator, denominator) per trace, e.g. (items removed,
+    items planted). The bootstrap asks: if this split had been a different
+    random draw of traces, how much would the score move? It redraws the
+    traces with replacement many times, recomputes the score each time, &
+    reports the range that holds the middle 95% of those scores.
+
+    Whole traces are redrawn, not single items, because items in one trace
+    are not independent (they come from the same carriers).
+    """
+    pairs = [p for p in pairs if p[1]]
+    if not pairs:
+        return None
+    rng = random.Random(seed)
+    scores = []
+    for _ in range(resamples):
+        draw = rng.choices(pairs, k=len(pairs))
+        scores.append(sum(p[0] for p in draw) / sum(p[1] for p in draw))
+    scores.sort()
+    return [scores[int(0.025 * (resamples - 1))], scores[int(0.975 * (resamples - 1))]]
+
+
 def score(data: Dataset, scrub_many: Callable[[list[str]], list[str]], name: str = "scrubber", keep_misses: bool = False, by_trace: bool = False) -> dict:
     """Run a scrubber over every step of every trace & return its scores.
 
@@ -133,8 +158,14 @@ def score(data: Dataset, scrub_many: Callable[[list[str]], list[str]], name: str
                 items[item["type"]] += 1
                 variants[item["variant"]] += 1
                 weight_total += weight
-                per_trace[trace["trace_id"]]["items"] += 1
-                per_trace[trace["trace_id"]]["removed"] += gone
+                tally = per_trace[trace["trace_id"]]
+                tally["items"] += 1
+                tally["removed"] += gone
+                tally["weight"] += weight
+                tally["weight_removed"] += weight * gone
+                if item["variant"] == "adversarial":
+                    tally["adversarial"] += 1
+                    tally["adversarial_removed"] += gone
                 if gone:
                     removed_items[item["type"]] += 1
                     removed_variants[item["variant"]] += 1
@@ -187,6 +218,10 @@ def score(data: Dataset, scrub_many: Callable[[list[str]], list[str]], name: str
         "decoys_kept": _ratio(sum(decoys_kept.values()), sum(decoys.values())),
         "python_kept": _ratio(python_ok, python_total),
         "traces_per_sec": _ratio(len(data.traces), seconds),
+        # 95% bootstrap intervals over traces (see bootstrap_ci)
+        "recall_ci": bootstrap_ci([(t["removed"], t["items"]) for t in per_trace.values()]),
+        "severity_ci": bootstrap_ci([(t["weight_removed"], t["weight"]) for t in per_trace.values()]),
+        "adversarial_ci": bootstrap_ci([(t["adversarial_removed"], t["adversarial"]) for t in per_trace.values()]),
         "recall_by_type": {t: removed_items[t] / n for t, n in sorted(items.items())},
         "recall_by_variant": {v: removed_variants[v] / n for v, n in sorted(variants.items())},
         "decoys_kept_by_type": {t: decoys_kept[t] / n for t, n in sorted(decoys.items())},

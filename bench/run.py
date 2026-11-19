@@ -11,7 +11,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
+
+if __package__ in (None, ""):  # also allow `python bench/run.py`
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from bench import build_splits, charts, plugins
 from bench.score import SEVERITY, load_dataset, score
@@ -33,6 +37,7 @@ def run(split: str, only: list[str] | None = None, limit: int | None = None, reg
     if limit:
         data.traces = data.traces[:limit]
     results, skipped = [], []
+    saved = _saved_results(split) if not limit else {}
     for entry in plugins.load_registry(registry):
         if only and entry["name"] not in only:
             continue
@@ -42,7 +47,13 @@ def run(split: str, only: list[str] | None = None, limit: int | None = None, reg
         try:
             scrub_many = plugins.load(entry)
         except plugins.Unavailable as reason:
-            skipped.append(str(reason))
+            # The tool isn't installed here. If a saved result for the same data exists, show it.
+            old = saved.get(entry["name"])
+            if old and old["n_traces"] == len(data.traces) and old["counts"]["chars"]["total"] == sum(len(s["content"]) for t in data.traces for s in t["steps"]):
+                results.append({**old, "reused": True})
+                skipped.append(f"{reason}. Its row shows the saved result from the last run that had it installed.")
+            else:
+                skipped.append(str(reason))
             continue
         result = score(data, scrub_many, entry["name"])
         result["description"] = entry.get("description", "")
@@ -58,7 +69,13 @@ def adversarial_cases(names: list[str], registry: str | Path = plugins.REGISTRY)
     """Score the hand-written traces alone, case by case: {scrubber: {trace_id: counts}}."""
     data = load_dataset(build_splits.DATA_ROOT / "adversarial")
     entries = {e["name"]: e for e in plugins.load_registry(registry)}
-    return {name: score(data, plugins.load(entries[name]), name, by_trace=True)["by_trace"] for name in names}
+    cases = {}
+    for name in names:
+        try:
+            cases[name] = score(data, plugins.load(entries[name]), name, by_trace=True)["by_trace"]
+        except plugins.Unavailable:
+            pass  # not installed here: its saved cases, if any, are used instead
+    return cases
 
 
 def adversarial_table(cases: dict[str, dict]) -> list[str]:
@@ -74,8 +91,24 @@ def adversarial_table(cases: dict[str, dict]) -> list[str]:
     return _table(["hand-written case"] + names, rows)
 
 
+def _saved_results(split: str) -> dict[str, dict]:
+    path = HERE / f"results_{split}.json"
+    if not path.exists():
+        return {}
+    return {r["name"]: r for r in json.loads(path.read_text(encoding="utf-8"))["results"]}
+
+
 def pct(x: float | None, digits: int = 1) -> str:
     return "n/a" if x is None else f"{100 * x:.{digits}f}%"
+
+
+def with_ci(x: float | None, ci: list[float] | None) -> str:
+    """A percentage followed by its 95% interval, e.g. `98.1% (97.5 to 98.6)`."""
+    if x is None:
+        return "n/a"
+    if not ci or ci[0] == ci[1]:
+        return pct(x)
+    return f"{100 * x:.1f}% ({100 * ci[0]:.1f} to {100 * ci[1]:.1f})"
 
 
 def speed(x: float | None) -> str:
@@ -91,8 +124,9 @@ def _table(header: list[str], rows: list[list[str]]) -> list[str]:
 def main_table(results: list[dict]) -> list[str]:
     header = ["scrubber", "balance", "severity-weighted score", "recall", "precision", "utility kept", "decoys kept", "Python still parses", "adversarial recall", "traces/sec"]
     rows = [
-        [r["name"], pct(r["balance"]), pct(r["severity_score"]), pct(r["recall"]), pct(r["precision"]), pct(r["utility_kept"], 2), pct(r["decoys_kept"]),
-         pct(r["python_kept"]), pct(r["recall_by_variant"].get("adversarial")), speed(r["traces_per_sec"])]
+        [r["name"], pct(r["balance"]), with_ci(r["severity_score"], r.get("severity_ci")), with_ci(r["recall"], r.get("recall_ci")), pct(r["precision"]),
+         pct(r["utility_kept"], 2), pct(r["decoys_kept"]), pct(r["python_kept"]),
+         with_ci(r["recall_by_variant"].get("adversarial"), r.get("adversarial_ci")), speed(r["traces_per_sec"])]
         for r in results
     ]
     return _table(header, rows)
@@ -128,6 +162,8 @@ def leaderboard(results: list[dict], skipped: list[str], split: str, cases: dict
         "- **Python still parses:** share of Python files that are still valid Python after scrubbing.",
         "- **adversarial recall:** recall on the hand-written traces only, in formats the generator never produces.",
         "- **traces/sec:** scrubbing speed on one CPU core, scoring time excluded.",
+        "- **the ranges in brackets** are 95% confidence intervals from a bootstrap over traces: redraw the traces with replacement 2,000 times, rescore, & take the middle 95%. "
+        "They say how much a score would move on a different random draw of traces from the same generator. They do not cover the bigger uncertainty: how different real traces are from generated ones.",
         "",
         "## Recall by type",
         "",
@@ -184,12 +220,20 @@ def main() -> None:
     elif args.only or args.limit:
         print("\n(partial run: nothing written)")
         return
+    cases = {}
+    if args.split == "test":
+        # Case-by-case results on the hand-written traces are saved with each entry,
+        # so an entry that isn't installed here still shows its saved cases.
+        fresh = adversarial_cases([r["name"] for r in results if r["name"] not in BASELINES])
+        for r in results:
+            if r["name"] in fresh:
+                r["adversarial_cases"] = fresh[r["name"]]
+        cases = {r["name"]: r["adversarial_cases"] for r in results if r.get("adversarial_cases")}
     results_path.write_text(json.dumps({"split": args.split, "skipped": skipped, "results": results}, indent=2) + "\n", encoding="utf-8")
     if args.split == "test":
         (HERE / "plots").mkdir(exist_ok=True)
         charts.recall_heatmap(results, HERE / "plots" / "recall_heatmap.png")
         charts.recall_vs_utility(results, HERE / "plots" / "recall_vs_utility.png")
-        cases = adversarial_cases([r["name"] for r in results if r["name"] not in BASELINES])
         (HERE / "LEADERBOARD.md").write_text(leaderboard(results, skipped, args.split, cases), encoding="utf-8")
         print("\nwrote bench/LEADERBOARD.md, bench/results_test.json & bench/plots/")
 

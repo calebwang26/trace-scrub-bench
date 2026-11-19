@@ -2,7 +2,7 @@ import random
 
 import pytest
 
-from scrubber.sample import allocate, max_deviation, sample_card, stratified_sample, stratum
+from scrubber.sample import allocate, max_deviation, sample_card, scrubbing_line, stratified_sample, stratum
 from scrubber.stats import compute, p90, to_markdown
 from tracegen.generate import generate_trace
 
@@ -73,6 +73,15 @@ def test_sample_is_deterministic_and_seed_dependent(traces):
     ids = lambda seed: [t["trace_id"] for t in stratified_sample(traces, 100, seed)]
     assert ids(3) == ids(3)
     assert ids(3) != ids(4)
+
+
+def test_sample_card_states_the_scrubbers_measured_miss_rate():
+    scores = {"recall": 0.981, "severity_score": 0.984, "recall_by_variant": {"adversarial": 0.586}}
+    line = scrubbing_line("scrubber v2", scores)
+    assert "removed 98.1%" in line and "about 1.9% of sensitive items to remain" in line and "58.6%" in line
+    assert "not guaranteed clean" in line
+    assert scrubbing_line(None, None) == "not scrubbed"
+    assert "not measured" in scrubbing_line("some tool", None)
 
 
 def test_sample_card_reports_both_columns(traces):
