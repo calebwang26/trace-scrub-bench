@@ -164,3 +164,10 @@ Every scrubber was frozen before this run. Nothing in `scrubber/` was changed af
 - The public repository `trace-scrub-bench` is a fresh one. It received exactly the rewritten `main` branch: every commit & every merge of the build, with only the no-reply address in it. It was created private, CI had to pass on it, & the old commit ids were confirmed absent from it before it was switched to public.
 - What the public repository does not have: the 11 pull-request web pages & their descriptions. The merge commits in the history (`Merge pull request #N ...`) show where each one landed, & each step's reasoning is in this log.
 - **Lesson for the next project:** switch on "Keep my email addresses private" *before* the first pull request is merged. Local git settings don't cover commits that GitHub creates itself.
+
+### After publishing: repository settings
+
+- **Branch protection on `main`:** changes need a pull request, & both CI checks (`tests`, `gitleaks`) must pass before it can merge. This applies to the owner too. Force pushes & deleting the branch are blocked. The rule was a habit during the build; now GitHub enforces it. (Branch protection isn't available on a free private repository, which is why it only starts here.)
+- **GitHub secret scanning & push protection: on.**
+- **Problem:** GitHub's scanner immediately raised one alert, "OpenAI API Key", on a hand-written test value in `tests/test_scrub.py` (`sk-FAKE...`). It was never a real key & carries the `FAKE` marker; the local gitleaks scan allows it for that reason, but GitHub's scanner doesn't know this repo's marker. **Fix:** the alert was closed as "used in tests", & the test value is now glued from two parts, like the secrets in the generator. **Lesson:** build key-shaped test values from parts too, not only the generator's.
+- This change went through the protected flow (pull request, both checks, merge), which confirmed the protection works.
