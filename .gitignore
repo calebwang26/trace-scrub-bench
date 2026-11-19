@@ -1,0 +1,28 @@
+# secrets & local environments
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# generated data: never committed, always rebuilt from the seeded generator
+data/
+bench/data/
+outputs/
+*.jsonl
+*.zip
+*.tar.gz
+
+# third-party downloads & caches
+.cache/
+*.whl
+
+# editors & OS
+.DS_Store
+.idea/
+.vscode/

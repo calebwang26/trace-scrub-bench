@@ -1,0 +1,13 @@
+# Secret-scanner config for this repo.
+# It keeps every default gitleaks rule and adds one exception:
+# synthetic secrets in this project always carry the marker FAKE,
+# so a finding whose secret contains FAKE is allowed. Anything else is blocked.
+title = "trace-scrub-bench gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Synthetic secrets carry the FAKE marker"
+regexTarget = "match"
+regexes = ['''FAKE''']

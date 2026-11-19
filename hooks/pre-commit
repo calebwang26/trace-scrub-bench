@@ -1,0 +1,8 @@
+#!/bin/sh
+# Pre-commit secret scan: blocks the commit if staged changes contain a secret.
+# Install once per clone with:  make hooks
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "pre-commit: gitleaks is not installed (brew install gitleaks). Commit blocked." >&2
+  exit 1
+fi
+exec gitleaks protect --staged --no-banner --redact
