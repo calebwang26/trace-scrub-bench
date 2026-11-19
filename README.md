@@ -107,7 +107,7 @@ pip install -r requirements.txt
 make all
 ```
 
-`make all` runs the tests, generates the 2,000-trace dataset, prints its statistics, scrubs it with v2, draws a stratified sample with a sample card (`outputs/sample/`), rebuilds the benchmark splits, verifies their checksums & scores every registered scrubber into `bench/LEADERBOARD.md`. It takes about a minute.
+`make all` runs the tests, generates the 2,000-trace dataset, prints its statistics, scrubs it with v2, draws a stratified sample with a sample card (`outputs/sample/`), rebuilds the benchmark splits, verifies their checksums & scores every registered scrubber into `bench/LEADERBOARD.md`. From a fresh clone it takes about a minute & a half.
 
 The two third-party entries are optional & are skipped (with a note in the leaderboard) when they are not installed. The committed leaderboard was produced with both:
 
