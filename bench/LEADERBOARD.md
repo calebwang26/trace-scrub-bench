@@ -6,13 +6,13 @@ Regenerate with `python -m bench.run`. Every number except traces/sec is determi
 
 | scrubber | balance | severity-weighted score | recall | precision | utility kept | decoys kept | Python still parses | adversarial recall | traces/sec |
 |---|---|---|---|---|---|---|---|---|---|
-| regex+entropy-v2 | 99.2% | 98.4% | 98.1% | 95.9% | 99.93% | 95.0% | 100.0% | 58.6% | 120 |
-| v2-without-entropy | 99.1% | 98.2% | 98.0% | 100.0% | 100.00% | 100.0% | 100.0% | 51.7% | 200 |
-| regex-v1 | 80.1% | 67.0% | 68.1% | 85.8% | 99.80% | 56.5% | 100.0% | 17.2% | 390 |
-| gitleaks | 54.5% | 37.5% | 21.4% | 94.7% | 99.94% | 100.0% | 100.0% | 20.7% | 22 |
-| presidio | 31.0% | 18.4% | 34.5% | 13.3% | 98.93% | 75.1% | 41.0% | 24.1% | 1.6 |
-| do-nothing | 0.0% | 0.0% | 0.0% | n/a | 100.00% | 100.0% | 100.0% | 0.0% | 360,000 |
-| redact-everything | 0.0% | 100.0% | 100.0% | 1.5% | 0.00% | 0.0% | 0.0% | 100.0% | 320,000 |
+| regex+entropy-v2 | 99.2% | 98.4% (98.0 to 98.9) | 98.1% (97.6 to 98.6) | 95.9% | 99.93% | 95.0% | 100.0% | 58.6% (37.9 to 78.6) | 180 |
+| v2-without-entropy | 99.1% | 98.2% (97.7 to 98.7) | 98.0% (97.4 to 98.5) | 100.0% | 100.00% | 100.0% | 100.0% | 51.7% (31.0 to 70.4) | 200 |
+| regex-v1 | 80.1% | 67.0% (65.3 to 68.6) | 68.1% (66.7 to 69.5) | 85.8% | 99.80% | 56.5% | 100.0% | 17.2% (3.7 to 33.3) | 580 |
+| gitleaks | 54.5% | 37.5% (35.3 to 39.8) | 21.4% (19.8 to 23.1) | 94.7% | 99.94% | 100.0% | 100.0% | 20.7% (3.6 to 44.0) | 24 |
+| presidio | 31.0% | 18.4% (17.0 to 19.9) | 34.5% (32.7 to 36.2) | 13.3% | 98.93% | 75.1% | 41.0% | 24.1% (0.0 to 46.4) | 1.8 |
+| do-nothing | 0.0% | 0.0% | 0.0% | n/a | 100.00% | 100.0% | 100.0% | 0.0% | 470,000 |
+| redact-everything | 0.0% | 100.0% | 100.0% | 1.5% | 0.00% | 0.0% | 0.0% | 100.0% | 380,000 |
 
 ## How to read the columns
 
@@ -25,6 +25,7 @@ Regenerate with `python -m bench.run`. Every number except traces/sec is determi
 - **Python still parses:** share of Python files that are still valid Python after scrubbing.
 - **adversarial recall:** recall on the hand-written traces only, in formats the generator never produces.
 - **traces/sec:** scrubbing speed on one CPU core, scoring time excluded.
+- **the ranges in brackets** are 95% confidence intervals from a bootstrap over traces: redraw the traces with replacement 2,000 times, rescore, & take the middle 95%. They say how much a score would move on a different random draw of traces from the same generator. They do not cover the bigger uncertainty: how different real traces are from generated ones.
 
 ## Recall by type
 

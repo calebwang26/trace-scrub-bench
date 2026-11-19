@@ -12,7 +12,19 @@
       "utility_kept": 0.9993452743798016,
       "decoys_kept": 0.9499079189686924,
       "python_kept": 1.0,
-      "traces_per_sec": 120.12032230068895,
+      "traces_per_sec": 184.19144362427747,
+      "recall_ci": [
+        0.9761489237929029,
+        0.9862503580635921
+      ],
+      "severity_ci": [
+        0.9798811439891049,
+        0.988668893129771
+      ],
+      "adversarial_ci": [
+        0.3793103448275862,
+        0.7857142857142857
+      ],
       "recall_by_type": {
         "aws_key": 1.0,
         "db_password": 0.9946236559139785,
@@ -89,7 +101,19 @@
       "utility_kept": 0.9999985144256696,
       "decoys_kept": 0.9996316758747698,
       "python_kept": 1.0,
-      "traces_per_sec": 198.5282713017751,
+      "traces_per_sec": 197.00693219699946,
+      "recall_ci": [
+        0.9738949866508454,
+        0.9847919655667144
+      ],
+      "severity_ci": [
+        0.9766905426733034,
+        0.9866674463481667
+      ],
+      "adversarial_ci": [
+        0.3103448275862069,
+        0.7037037037037037
+      ],
       "recall_by_type": {
         "aws_key": 1.0,
         "db_password": 0.9946236559139785,
@@ -166,7 +190,19 @@
       "utility_kept": 0.9979891100799024,
       "decoys_kept": 0.5646408839779006,
       "python_kept": 1.0,
-      "traces_per_sec": 392.87881969148725,
+      "traces_per_sec": 581.4772307992655,
+      "recall_ci": [
+        0.6671408250355618,
+        0.6951583980872684
+      ],
+      "severity_ci": [
+        0.6529504998780785,
+        0.6864135550674616
+      ],
+      "adversarial_ci": [
+        0.037037037037037035,
+        0.3333333333333333
+      ],
       "recall_by_type": {
         "aws_key": 0.6909090909090909,
         "db_password": 0.8440860215053764,
@@ -243,7 +279,19 @@
       "utility_kept": 0.9994200482877683,
       "decoys_kept": 1.0,
       "python_kept": 1.0,
-      "traces_per_sec": 22.253710059808377,
+      "traces_per_sec": 23.94036687769395,
+      "recall_ci": [
+        0.19756235827664398,
+        0.23079204983684368
+      ],
+      "severity_ci": [
+        0.3532232949236998,
+        0.39792217372594824
+      ],
+      "adversarial_ci": [
+        0.03571428571428571,
+        0.44
+      ],
       "recall_by_type": {
         "aws_key": 0.7454545454545455,
         "db_password": 0.0,
@@ -320,7 +368,19 @@
       "utility_kept": 0.9893188030958708,
       "decoys_kept": 0.7506445672191528,
       "python_kept": 0.4102115476379831,
-      "traces_per_sec": 1.6401512846669757,
+      "traces_per_sec": 1.7671349010579396,
+      "recall_ci": [
+        0.3274679391589621,
+        0.36226950354609927
+      ],
+      "severity_ci": [
+        0.16982968369829685,
+        0.19878795151806072
+      ],
+      "adversarial_ci": [
+        0.0,
+        0.4642857142857143
+      ],
       "recall_by_type": {
         "aws_key": 0.04,
         "db_password": 0.010752688172043012,
@@ -397,7 +457,19 @@
       "utility_kept": 1.0,
       "decoys_kept": 1.0,
       "python_kept": 1.0,
-      "traces_per_sec": 355816.2177654195,
+      "traces_per_sec": 473434.27565038693,
+      "recall_ci": [
+        0.0,
+        0.0
+      ],
+      "severity_ci": [
+        0.0,
+        0.0
+      ],
+      "adversarial_ci": [
+        0.0,
+        0.0
+      ],
       "recall_by_type": {
         "aws_key": 0.0,
         "db_password": 0.0,
@@ -474,7 +546,19 @@
       "utility_kept": 0.0,
       "decoys_kept": 0.0,
       "python_kept": 0.0,
-      "traces_per_sec": 322063.41762573936,
+      "traces_per_sec": 383404.77123570524,
+      "recall_ci": [
+        1.0,
+        1.0
+      ],
+      "severity_ci": [
+        1.0,
+        1.0
+      ],
+      "adversarial_ci": [
+        1.0,
+        1.0
+      ],
       "recall_by_type": {
         "aws_key": 1.0,
         "db_password": 1.0,
