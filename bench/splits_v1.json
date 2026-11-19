@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "note": "Frozen benchmark splits. Data is regenerated from these seeds & checked against the SHA-256 checksums; it is never committed. Checksums were produced with Python 3.11.",
+  "parts": {
+    "dev": {
+      "seed": 20261118,
+      "n_traces": 2000,
+      "purpose": "building & tuning scrubbers",
+      "sha256": {
+        "traces.jsonl": "27faa094d3545f54e5b7e3d43b6fd768223f828b3847cb54b7746fda9c68a692",
+        "ground_truth.jsonl": "b98da1c1f0f58314fd49454ffd0474d449abb2e2b8ff79ab695cf1b0ecfe014e",
+        "decoys.jsonl": "17f57af402845b43812ac1be51b6af5c9cf183b414ff4fe05992f0945a28f15d",
+        "python_steps.jsonl": "2802ba53162ccb15d38fe88bee16c38b399f32df1e35db934224e0f370859ea8"
+      }
+    },
+    "test": {
+      "seed": 77191,
+      "n_traces": 1000,
+      "purpose": "held out: final scores only",
+      "sha256": {
+        "traces.jsonl": "9cfca2e52fb9e9ee5b0ed9f8a0b5fee27d94cef4411bdaa3b1f94589809c3767",
+        "ground_truth.jsonl": "29c3944d741ca35b734a6f36beb0ae01f00d7ccc2b04783e9ca357febb0d715a",
+        "decoys.jsonl": "4749e8d51f6b6bcbbf72a0752482848e2182d57969d0decbf93ced114911d0f4",
+        "python_steps.jsonl": "02a3f304176b8cd3ff1c5bbd17d6d1925f8d832dcd5ff006623a7198ec8ed760"
+      }
+    },
+    "adversarial": {
+      "source": "bench/adversarial.py",
+      "purpose": "hand-written traces, scored with test",
+      "sha256": {
+        "traces.jsonl": "1128b5f24aa422abea976e152fbd8d686c16e3b6ca4be865c257264c442df340",
+        "ground_truth.jsonl": "e208815d9cc9d5986608a7af4b01ae5ad0a3108a4af10cc062dc2d7472476b14",
+        "decoys.jsonl": "213a4ae228578762118e3f2f0c50978fe63f88b73b735cbebafef801a47600eb",
+        "python_steps.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  }
+}

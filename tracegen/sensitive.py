@@ -50,7 +50,7 @@ def b64(text: str) -> str:
     return base64.b64encode(text.encode()).decode()
 
 
-def _b64url_json(obj: dict) -> str:
+def b64url_json(obj: dict) -> str:
     raw = json.dumps(obj, separators=(",", ":")).encode()
     return base64.urlsafe_b64encode(raw).decode().rstrip("=")
 
@@ -79,8 +79,8 @@ def openai_key(rng: random.Random) -> str:
 
 def jwt(rng: random.Random) -> str:
     """JSON Web Token: header.payload.signature, each base64url."""
-    header = _b64url_json({"alg": "HS256", "typ": "JWT"})
-    payload = _b64url_json(
+    header = b64url_json({"alg": "HS256", "typ": "JWT"})
+    payload = b64url_json(
         {
             "sub": f"user_{rng.randrange(10**6):06d}",
             "role": rng.choice(["admin", "service", "member", "billing"]),
