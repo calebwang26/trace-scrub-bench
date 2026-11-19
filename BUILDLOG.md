@@ -151,9 +151,16 @@ Every scrubber was frozen before this run. Nothing in `scrubber/` was changed af
 
 1. **Secret scan of the entire history: pass.** `gitleaks detect --source . --log-opts="--all"` reports no leaks. Run again with the default rules & *without* the `FAKE` allowlist, it reports 5 findings, all in test files & all containing `FAKE` (4 GitHub-token-shaped test values, 1 JWT-shaped one). Nothing without the marker.
 2. **Commit emails: failed at first, then fixed in the git history.** The commits made on this machine always used the GitHub no-reply address. But the first 9 merge commits were created by GitHub when each pull request was merged, & GitHub wrote the account's primary email (a personal address) as their author. **Fix:** Caleb switched on "Keep my email addresses private" in GitHub's settings (the next merge commit then carried the no-reply address, which confirmed it), & with his explicit OK the author email of those 9 commits was rewritten & `main` was force-pushed. Checks afterwards: a backup bundle was taken first; the final file tree is identical before & after; all 47 commit messages, names & dates are unchanged; a fresh clone shows only the no-reply address on every ref.
-   **What the rewrite can't fix:** GitHub still serves the 9 old merge commits to anyone who asks for them by their id, & each merged pull request page links to its old commit. So in *this* repository the personal address stays retrievable for as long as GitHub keeps those orphaned commits. Whether to publish this repository anyway, publish the clean history as a fresh repository, or ask GitHub Support to purge the old commits is Caleb's decision. **The repo stays private until he decides.**
+   **What the rewrite can't fix:** GitHub still serves the 9 old merge commits to anyone who asks for them by their id, & each merged pull request page links to its old commit. So in *this* repository the personal address stays retrievable for as long as GitHub keeps those orphaned commits. **Caleb's decision:** publish the clean history as a fresh repository & keep the original one private (see "Publishing" below).
 3. **Confidential terms: pass.** No company, seller, buyer or partner names, prices or deal terms in any tracked file. The README describes the context generically.
 4. **Size: pass.** The largest tracked file is a 127 KB plot. No generated data, `.env` or `*.jsonl` file is tracked.
 5. **CI & fresh clone: pass.** CI is green on `main`. A fresh `gh repo clone` into a temp folder, a new virtual environment with only `requirements.txt`, then `make all`: exit code 0 in 85 seconds, 115 tests passed (1 skipped: Presidio not installed), checksums verified, & every non-Presidio leaderboard number identical to the committed one.
-6. **README review: waiting for Caleb.**
-7. **Switch to public: not done.** Waiting for Caleb's approval.
+6. **README review: approved by Caleb.**
+7. **Switch to public: approved by Caleb**, by the route described below.
+
+### Publishing
+
+- The repository this project was built in (11 pull requests, with their CI runs) was renamed `trace-scrub-bench-dev` & stays private, because its pull-request pages link to the 9 orphaned commits that still carry a personal email address.
+- The public repository `trace-scrub-bench` is a fresh one. It received exactly the rewritten `main` branch: every commit & every merge of the build, with only the no-reply address in it. It was created private, CI had to pass on it, & the old commit ids were confirmed absent from it before it was switched to public.
+- What the public repository does not have: the 11 pull-request web pages & their descriptions. The merge commits in the history (`Merge pull request #N ...`) show where each one landed, & each step's reasoning is in this log.
+- **Lesson for the next project:** switch on "Keep my email addresses private" *before* the first pull request is merged. Local git settings don't cover commits that GitHub creates itself.
