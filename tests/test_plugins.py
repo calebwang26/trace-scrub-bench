@@ -1,4 +1,5 @@
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -65,6 +66,13 @@ def test_benchmark_never_imports_the_scrubber_package():
     """bench/ must reach scrubbers only through scrubbers.yaml, never by importing them."""
     for path in (ROOT / "bench").rglob("*.py"):
         assert not re.search(r"^\s*(import|from)\s+scrubber\b", path.read_text(encoding="utf-8"), re.MULTILINE), path
+
+
+def test_the_runner_also_starts_as_a_plain_script():
+    """`python bench/run.py` must work, not only `python -m bench.run`."""
+    done = subprocess.run([sys.executable, "bench/run.py", "--only", "do-nothing", "--limit", "5"], cwd=ROOT, capture_output=True, text=True)
+    assert done.returncode == 0, done.stderr
+    assert "| do-nothing |" in done.stdout
 
 
 def test_balance_is_zero_for_both_baselines():
